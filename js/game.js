@@ -395,6 +395,7 @@ window.Game = {};
 	var hurt = 0;
 	var gg = false;
 	var hurtopacity = 0;
+	var roundopacity = 0;
 
 	var room = {
 		width: 1760,
@@ -435,6 +436,33 @@ window.Game = {};
 			{
 				hurtopacity -= 0.2;
 			}, 500);
+		}
+	};
+	var roundup = function()
+	{
+		roundopacity = 1;
+		if (player.health >= 0)
+		{
+			setTimeout(function()
+			{
+				roundopacity -= 0.2;
+			}, 150);
+			setTimeout(function()
+			{
+				roundopacity -= 0.2;
+			}, 300);
+			setTimeout(function()
+			{
+				roundopacity -= 0.2;
+			}, 450);
+			setTimeout(function()
+			{
+				roundopacity -= 0.2;
+			}, 600);
+			setTimeout(function()
+			{
+				roundopacity -= 0.2;
+			}, 750);
 		}
 	};
 	var zombieattack = function(num)
@@ -524,7 +552,7 @@ window.Game = {};
 	var zombiespawn = function()
 	{
 		console.log('spawn'+ spawnnum+' ' + zombies.length );
-		if(spawnnum > 0 && zombies.length < spawnnum)
+		if(spawnnum > 0 && zombies.length <= spawnnum)
 		{
 			zombies.push(new Game.Zombie(Math.floor((Math.random() * room.width) + 1), Math.floor((Math.random() * room.height) + 1)));
 		}
@@ -537,6 +565,7 @@ window.Game = {};
 				round.innerHTML = "Round:"+roundnum;
 				setTimeout(function()
 					{
+						roundup();
 						spawnnum = roundnum * 7;
 						round.style.color = '#000000';
 						spawner = window.setInterval(zombiespawn, spawntimer);
@@ -598,6 +627,12 @@ window.Game = {};
 		context.save();
 		context.fillStyle = '#8A0707';
 		context.globalAlpha = hurtopacity;
+		context.fillRect(0, 0, canvas.width, canvas.height);
+		context.restore();
+		//Round flash
+		context.save();
+		context.fillStyle = '#197319';
+		context.globalAlpha = roundopacity;
 		context.fillRect(0, 0, canvas.width, canvas.height);
 		context.restore();
 		// redraw all objects
