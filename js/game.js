@@ -204,6 +204,9 @@ window.Game = {};
 		// it represents the player position on the world(room), not the canvas position
 		this.x = x;
 		this.y = y;
+		this.dx = 0;
+		this.dy = 0;
+		this.mag = 0;
 		this.attackable = true;
 		this.cooldown = Math.floor((Math.random() * 3) + 1) * 1000;
 		// move speed in pixels per second
@@ -214,10 +217,11 @@ window.Game = {};
 	}
 	Zombie.prototype.update = function(step, playerX, playerY)
 	{
-		if (playerX > this.x) this.x += this.speed * step;
-		if (playerX < this.x) this.x -= this.speed * step;
-		if (playerY > this.y) this.y += this.speed * step;
-		if (playerY < this.y) this.y -= this.speed * step;
+	  this.dx = (playerX - this.x);
+		this.dy = (playerY - this.y);
+		this.mag = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
+		this.x+=(this.dx/this.mag)*this.speed * step;
+		this.y+=(this.dy/this.mag)*this.speed * step;
 	};
 	Zombie.prototype.draw = function(context, xView, yView)
 	{
@@ -248,7 +252,7 @@ window.Game = {};
 		this.dx = (ex - (x - xView));
 		this.dy = (ey - (y - yView));
 		this.mag = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
-		this.speed = 800;
+		this.speed = 700;
 		this.width = 6;
 		this.height = 6;
 	}
@@ -551,7 +555,6 @@ window.Game = {};
 	};
 	var zombiespawn = function()
 	{
-		console.log('spawn'+ spawnnum+' ' + zombies.length );
 		if(spawnnum > 0 && zombies.length <= spawnnum)
 		{
 			zombies.push(new Game.Zombie(Math.floor((Math.random() * room.width) + 1), Math.floor((Math.random() * room.height) + 1)));
@@ -614,7 +617,7 @@ window.Game = {};
 	var update = function(step)
 	{
 		player.update(step, room.width, room.height);
-		zombieupdate(step);
+		zombieupdate(step, player.x, player.y);
 		bulletupdate(step);
 		camera.update();
 	};
