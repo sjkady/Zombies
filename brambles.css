@@ -140,18 +140,40 @@ body {
   width: 65%;
 }
 
-#killcount
+#kills
 {
-  font-family: 'Codystar', serif;
-  font-size: 30px;
+  font-family: 'Special Elite', serif;
+  font-size: 35px;
   height: 50px;
-  width: 80px;
+  width: 200px;
   display:inline-block;
+  text-align: left;
 }
+#points
+{
+  font-family: 'Special Elite', serif;
+  font-size: 35px;
+  height: 50px;
+  width: 250px;
+  display:inline-block;
+  text-align: left;
+}
+#round
+{
+  font-family: 'Special Elite', serif;
+  font-size: 35px;
+  height: 50px;
+  width: 200px;
+  display:inline-block;
+  text-align: left;
+}
+
+
 #heartContainer
 {
   height: 50px;
   display:inline-block;
+  text-align: right;
 }
 
 .display

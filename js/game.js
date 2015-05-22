@@ -145,7 +145,8 @@ window.Game = {};
 		this.x = x;
 		this.y = y;
 		this.health = 3;
-		this.killcount = 0;
+		this.kills = 0;
+		this.points = 0;
 		// move speed in pixels per second
 		this.speed = 300;
 		// render properties
@@ -213,8 +214,6 @@ window.Game = {};
 	}
 	Zombie.prototype.update = function(step, playerX, playerY)
 	{
-		// parameter step is the time between frames ( in seconds )
-		// check controls and move the player accordingly
 		if (playerX > this.x) this.x += this.speed * step;
 		if (playerX < this.x) this.x -= this.speed * step;
 		if (playerY > this.y) this.y += this.speed * step;
@@ -276,17 +275,13 @@ window.Game = {};
 	{
 		this.x = x;
 		this.y = y;
-		this.dx = (ex - (x - xView));
-		this.dy = (ey - (y - yView));
-		this.mag = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
-		this.speed = 600;
-		this.width = 6;
-		this.height = 6;
+		this.width = 100;
+		this.height = 100;
 	}
 	Obstacle.prototype.draw = function(context, xView, yView)
 	{
 		context.save();
-		context.fillStyle = "#FEF1B5";
+		context.fillStyle = "#7765e3";
 		context.fillRect((this.x - this.width / 2) - xView, (this.y - this.height / 2) - yView, this.width, this.height);
 		context.restore();
 	};
@@ -312,9 +307,9 @@ window.Game = {};
 		ctx.canvas.height = this.height;
 		var rows = ~~(this.width / 44) + 1;
 		var columns = ~~(this.height / 44) + 1;
-		var color = "gray";
+		var color = "#808080 ";
 		ctx.save();
-		ctx.fillStyle = "gray";
+		ctx.fillStyle = "#808080 ";
 		for (var x = 0, i = 0; i < rows; x += 44, i++)
 		{
 			ctx.beginPath();
@@ -322,7 +317,7 @@ window.Game = {};
 			{
 				ctx.rect(x, y, 40, 40);
 			}
-			color = (color == "gray" ? "#2a2a2a" : "gray");
+			color = (color == "#808080 " ? "#2a2a2a" : "#808080 ");
 			ctx.fillStyle = color;
 			ctx.fill();
 			ctx.closePath();
@@ -368,13 +363,14 @@ window.Game = {};
 	};
 	Game.Map = Map;
 })();
+
 // Game Script
 (function()
 {
 	var canvas = document.getElementById("gameCanvas");
 	canvas.addEventListener("click", function(e)
 	{
-		fire(player.x, player.y, e.pageX - canvas.offsetLeft, e.pageY - canvas.offsetTop, camera.xView, camera.yView)
+		bulletspawn(player.x, player.y, e.pageX - canvas.offsetLeft, e.pageY - canvas.offsetTop, camera.xView, camera.yView);
 	}, false);
 	var context = canvas.getContext("2d");
 	if (window.innerWidth * 0.8 > 1080)
@@ -399,6 +395,7 @@ window.Game = {};
 	var hurt = 0;
 	var gg = false;
 	var hurtopacity = 0;
+
 	var room = {
 		width: 1760,
 		height: 880,
@@ -406,9 +403,12 @@ window.Game = {};
 	};
 	room.map.generate();
 	var player = new Game.Player(room.width / 2, room.height / 2);
-	var zombies = [new Game.Zombie(Math.floor((Math.random() * 1254) + 1), Math.floor((Math.random() * 758) + 1))];
+	var zombies = [new Game.Zombie(Math.floor((Math.random() * room.width) + 1), Math.floor((Math.random() * room.height) + 1))];
 	var shots = [];
 	var camera = new Game.Camera(0, 0, canvas.width, canvas.height, room.width, room.height);
+	var spawntimer = 3000;
+	var spawnnum = 10;
+	var roundnum = 1;
 	camera.follow(player, canvas.width / 2, canvas.height / 2);
 	var injured = function()
 	{
@@ -521,10 +521,29 @@ window.Game = {};
 			zombies[i].update(step, player.x, player.y);
 		}
 	};
-	var fire = function(x, y, ex, ey, xv, yv)
+	var zombiespawn = function()
 	{
-		shots.push(new Game.Bullet(x, y, ex, ey, xv, yv));
+		console.log('spawn'+ spawnnum+' ' + zombies.length );
+		if(spawnnum > 0 && zombies.length < spawnnum)
+		{
+			zombies.push(new Game.Zombie(Math.floor((Math.random() * room.width) + 1), Math.floor((Math.random() * room.height) + 1)));
+		}
+		if( spawnnum <= 0)
+		{
+				window.clearInterval(spawner);
+				roundnum +=1;
+				round.style.color =  '#808080'
+				spawntimer = spawntimer - (roundnum*200);
+				round.innerHTML = "Round:"+roundnum;
+				setTimeout(function()
+					{
+						spawnnum = roundnum * 7;
+						round.style.color = '#000000';
+						spawner = window.setInterval(zombiespawn, spawntimer);
+					},4000);
+		}
 	};
+
 	var bulletupdate = function(step)
 	{
 		for (var i = shots.length - 1; i >= 0; i--)
@@ -538,8 +557,11 @@ window.Game = {};
 					{
 						zombies.splice(g, 1);
 						shots.splice(i, 1);
-						player.killcount += 1;
-						killcount.innerHTML = player.killcount;
+						player.kills += 1;
+						player.points += 50;
+						kills.innerHTML = "Kills:"+player.kills;
+						points.innerHTML = "Points:"+player.points;
+						spawnnum -= 1;
 					}
 				}
 			}
@@ -555,6 +577,10 @@ window.Game = {};
 				}
 			}
 		}
+	};
+	var bulletspawn = function(x, y, ex, ey, xv, yv)
+	{
+		shots.push(new Game.Bullet(x, y, ex, ey, xv, yv));
 	};
 	var update = function(step)
 	{
@@ -586,10 +612,7 @@ window.Game = {};
 			shots[j].draw(context, camera.xView, camera.yView);
 		}
 	};
-	Game.zombiespawn = function()
-	{
-		zombies.push(new Game.Zombie(Math.floor((Math.random() * 1254) + 1), Math.floor((Math.random() * 758) + 1)));
-	};
+
 	var runningId = -1;
 	// Game Loop
 	var gameLoop = function(timestamp)
@@ -605,6 +628,7 @@ window.Game = {};
 	{
 		if (runningId == -1)
 		{
+			spawner = window.setInterval(zombiespawn, spawntimer);
 			runningId = requestAnimationFrame(gameLoop); // <-- changed
 			console.log("play");
 		}
@@ -619,6 +643,7 @@ window.Game = {};
 		{
 			cancelAnimationFrame(runningId); // <-- changed
 			runningId = -1;
+			window.clearInterval(spawner);
 			console.log("paused");
 		}
 	};
@@ -627,7 +652,7 @@ Game.controls = {
 	left: false,
 	up: false,
 	right: false,
-	down: false,
+	down: false
 };
 window.addEventListener("keydown", function(e)
 {
@@ -670,11 +695,12 @@ window.addEventListener("keyup", function(e)
 }, false);
 window.onload = function()
 {
+	var round = document.getElementById('round');
 	var heart1 = document.getElementById('heart1');
 	var heart2 = document.getElementById('heart2');
 	var heart3 = document.getElementById('heart3');
-	var killcount = document.getElementById('killcount');
-	var spawntimer = 3000;
+	var kills = document.getElementById('kills');
+	var points = document.getElementById('points');
+	var spawner;
 	Game.play();
-	setInterval(Game.zombiespawn, spawntimer);
 };
