@@ -1,3 +1,4 @@
+//animation frame wrapper
 (function()
 {
 	var lastTime = 0;
@@ -197,7 +198,7 @@ window.Game = {};
 // wrapper for "class" Zombie
 (function()
 {
-	function Zombie(x, y)
+	function Zombie(x, y, health)
 	{
 		// (x, y) = center of object
 		// ATTENTION:
@@ -207,6 +208,7 @@ window.Game = {};
 		this.dx = 0;
 		this.dy = 0;
 		this.mag = 0;
+		this.health = health;
 		this.attackable = true;
 		this.cooldown = Math.floor((Math.random() * 3) + 1) * 1000;
 		// move speed in pixels per second
@@ -272,7 +274,7 @@ window.Game = {};
 	// add "class" Player to our Game object
 	Game.Bullet = Bullet;
 })();
-// wrapper for "class" Bullet
+// wrapper for "class" Obstacle
 (function()
 {
 	function Obstacle(startx, y, ex, ey, xView, yView)
@@ -333,7 +335,6 @@ window.Game = {};
 		// clear context
 		ctx = null;
 	};
-	// draw the map adjusted to camera
 	Map.prototype.draw = function(context, xView, yView)
 	{
 		// easiest way: draw the entire map changing only the destination coordinate in canvas
@@ -367,7 +368,6 @@ window.Game = {};
 	};
 	Game.Map = Map;
 })();
-
 // Game Script
 (function()
 {
@@ -408,7 +408,7 @@ window.Game = {};
 	};
 	room.map.generate();
 	var player = new Game.Player(room.width / 2, room.height / 2);
-	var zombies = [new Game.Zombie(Math.floor((Math.random() * room.width) + 1), Math.floor((Math.random() * room.height) + 1))];
+	var zombies = [];
 	var shots = [];
 	var camera = new Game.Camera(0, 0, canvas.width, canvas.height, room.width, room.height);
 	var spawntimer = 3000;
@@ -557,14 +557,14 @@ window.Game = {};
 	{
 		if(spawnnum > 0 && zombies.length <= spawnnum)
 		{
-			zombies.push(new Game.Zombie(Math.floor((Math.random() * room.width) + 1), Math.floor((Math.random() * room.height) + 1)));
+			zombies.push(new Game.Zombie(Math.floor((Math.random() * room.width) + 1), Math.floor((Math.random() * room.height) + 1), roundnum));
 		}
 		if( spawnnum <= 0)
 		{
 				window.clearInterval(spawner);
 				roundnum +=1;
 				round.style.color =  '#808080'
-				spawntimer = spawntimer - (roundnum*200);
+				spawntimer = spawntimer - 200;
 				round.innerHTML = "Round:"+roundnum;
 				setTimeout(function()
 					{
@@ -587,13 +587,22 @@ window.Game = {};
 				{
 					if ((Math.abs(zombies[g].x - shots[i].x) < 20) && ((Math.abs(zombies[g].y - shots[i].y) < 20)))
 					{
-						zombies.splice(g, 1);
+						zombies[g].health -= 1;
 						shots.splice(i, 1);
-						player.kills += 1;
-						player.points += 50;
-						kills.innerHTML = "Kills:"+player.kills;
-						points.innerHTML = "Points:"+player.points;
-						spawnnum -= 1;
+						if(zombies[g].health<=0)
+						{
+							zombies.splice(g, 1);
+							player.kills += 1;
+							player.points += 50;
+							kills.innerHTML = "Kills:"+player.kills;
+							points.innerHTML = "Points:"+player.points;
+							spawnnum -= 1;
+						}
+						else
+						{
+							player.points += 10;
+							points.innerHTML = "Points:"+player.points;
+						}
 					}
 				}
 			}
@@ -686,6 +695,7 @@ window.Game = {};
 		}
 	};
 })();
+//controls
 Game.controls = {
 	left: false,
 	up: false,
@@ -731,6 +741,7 @@ window.addEventListener("keyup", function(e)
 			break;
 	}
 }, false);
+//kick it all off on window load
 window.onload = function()
 {
 	var round = document.getElementById('round');
