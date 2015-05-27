@@ -187,7 +187,7 @@ window.Game = {};
 	{
 		// draw a simple rectangle shape as our player model
 		context.save();
-		context.fillStyle = "#FF0066";
+		context.fillStyle = "#E5C298";
 		// before draw we need to convert player world's position to canvas position
 		context.fillRect((this.x - this.width / 2) - xView, (this.y - this.height / 2) - yView, this.width, this.height);
 		context.restore();
@@ -210,6 +210,7 @@ window.Game = {};
 		this.mag = 0;
 		this.health = health;
 		this.attackable = true;
+		this.hit = false;
 		this.cooldown = Math.floor((Math.random() * 3) + 1) * 1000;
 		// move speed in pixels per second
 		this.speed = Math.floor((Math.random() * 200) + 50);
@@ -229,13 +230,17 @@ window.Game = {};
 	{
 		// draw a simple rectangle shape as our player model
 		context.save();
-		if (this.attackable === true)
+		if(this.hit===true)
 		{
-			context.fillStyle = "#D7EB51";
+			context.fillStyle = "#8A0707";
+		}
+		else if (this.attackable === true)
+		{
+			context.fillStyle = "#565e20";
 		}
 		else
 		{
-			context.fillStyle = "#565e20";
+			context.fillStyle = "#D7EB10";
 		}
 		// before draw we need to convert player world's position to canvas position
 		context.fillRect((this.x - this.width / 2) - xView, (this.y - this.height / 2) - yView, this.width, this.height);
@@ -267,7 +272,7 @@ window.Game = {};
 	Bullet.prototype.draw = function(context, xView, yView)
 	{
 		context.save();
-		context.fillStyle = "#FEF1B5";
+		context.fillStyle = "#C87533";
 		context.fillRect((this.x - this.width / 2) - xView, (this.y - this.height / 2) - yView, this.width, this.height);
 		context.restore();
 	};
@@ -313,9 +318,9 @@ window.Game = {};
 		ctx.canvas.height = this.height;
 		var rows = ~~(this.width / 44) + 1;
 		var columns = ~~(this.height / 44) + 1;
-		var color = "#808080 ";
+		var color = "#e0e0e0";
 		ctx.save();
-		ctx.fillStyle = "#808080 ";
+		ctx.fillStyle = "#e0e0e0";
 		for (var x = 0, i = 0; i < rows; x += 44, i++)
 		{
 			ctx.beginPath();
@@ -323,7 +328,7 @@ window.Game = {};
 			{
 				ctx.rect(x, y, 40, 40);
 			}
-			color = (color == "#808080 " ? "#2a2a2a" : "#808080 ");
+			color = (color == "#e0e0e0" ? "#dbdbdb" : "#e0e0e0");
 			ctx.fillStyle = color;
 			ctx.fill();
 			ctx.closePath();
@@ -409,6 +414,7 @@ window.Game = {};
 	room.map.generate();
 	var player = new Game.Player(room.width / 2, room.height / 2);
 	var zombies = [];
+	var obstacles = [];
 	var shots = [];
 	var camera = new Game.Camera(0, 0, canvas.width, canvas.height, room.width, room.height);
 	var spawntimer = 3000;
@@ -450,7 +456,11 @@ window.Game = {};
 			setTimeout(function()
 			{
 				roundopacity -= 0.2;
-			}, 150);
+			}, 100);
+			setTimeout(function()
+			{
+				roundopacity -= 0.2;
+			}, 200);
 			setTimeout(function()
 			{
 				roundopacity -= 0.2;
@@ -458,15 +468,11 @@ window.Game = {};
 			setTimeout(function()
 			{
 				roundopacity -= 0.2;
-			}, 450);
+			}, 400);
 			setTimeout(function()
 			{
 				roundopacity -= 0.2;
-			}, 600);
-			setTimeout(function()
-			{
-				roundopacity -= 0.2;
-			}, 750);
+			}, 500);
 		}
 	};
 	var zombieattack = function(num)
@@ -563,7 +569,7 @@ window.Game = {};
 		{
 				window.clearInterval(spawner);
 				roundnum +=1;
-				round.style.color =  '#808080'
+				round.style.color =  '#808080';
 				spawntimer = spawntimer - 200;
 				round.innerHTML = "Round:"+roundnum;
 				setTimeout(function()
@@ -575,7 +581,18 @@ window.Game = {};
 					},4000);
 		}
 	};
+	var zombiehit = function(num)
+	{
 
+		zombies[num].hit = true;
+		setTimeout(function()
+		{
+			if (typeof zombies[num] != "undefined")
+			{
+				zombies[num].hit = false;
+			}
+		}, 100);
+	};
 	var bulletupdate = function(step)
 	{
 		for (var i = shots.length - 1; i >= 0; i--)
@@ -602,6 +619,7 @@ window.Game = {};
 						{
 							player.points += 10;
 							points.innerHTML = "Points:"+player.points;
+							zombiehit(g);
 						}
 					}
 				}
