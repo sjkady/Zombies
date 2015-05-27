@@ -685,7 +685,14 @@ window.Game = {};
 		now = timestamp; // <-- current timestamp (in milliseconds)
 		step = (now - last) / 1000; // <-- time between frames (in seconds)
 		last = now; // <-- store the current timestamp for further evaluation in next frame/step
-		update(step);
+		if(step > 0.1)
+		{
+			update(0.0001);
+		}
+		else
+		{
+			update(step);
+		}
 		draw();
 		runningId = requestAnimationFrame(gameLoop); // <-- added
 	};
@@ -693,6 +700,7 @@ window.Game = {};
 	{
 		if (runningId == -1)
 		{
+			last
 			spawner = window.setInterval(zombiespawn, spawntimer);
 			runningId = requestAnimationFrame(gameLoop); // <-- changed
 			console.log("play");
