@@ -160,10 +160,50 @@ window.Game = {};
 		// check controls and move the player accordingly
 		if (this.health >= 0)
 		{
-			if (Game.controls.left) this.x -= this.speed * step;
-			if (Game.controls.up) this.y -= this.speed * step;
-			if (Game.controls.right) this.x += this.speed * step;
-			if (Game.controls.down) this.y += this.speed * step;
+			if (Game.controls.left)
+			{
+				if(Game.controls.up || Game.controls.down)
+				{
+					this.x -= this.speed / Math.sqrt(2)* step;
+				}
+				else
+				{
+					this.x -= this.speed * step;
+				}
+			}
+			if (Game.controls.right)
+			{
+				if(Game.controls.up || Game.controls.down)
+				{
+					this.x += this.speed / Math.sqrt(2) * step;
+				}
+				else
+				{
+					this.x += this.speed * step;
+				}
+			}
+			if (Game.controls.up)
+			{
+				if(Game.controls.right || Game.controls.left)
+				{
+				 	this.y -= this.speed / Math.sqrt(2) * step;
+				}
+				else
+				{
+					this.y -= this.speed * step;
+				}
+			}
+			if (Game.controls.down)
+			{
+				if(Game.controls.right || Game.controls.left)
+				{
+					this.y += this.speed / Math.sqrt(2) * step;
+				}
+				else
+				{
+					this.y += this.speed * step;
+				}
+			}
 		}
 		// don't let player leaves the world's boundary
 		if (this.x - this.width / 2 < 0)
@@ -700,7 +740,6 @@ window.Game = {};
 	{
 		if (runningId == -1)
 		{
-			last
 			spawner = window.setInterval(zombiespawn, spawntimer);
 			runningId = requestAnimationFrame(gameLoop); // <-- changed
 			console.log("play");
