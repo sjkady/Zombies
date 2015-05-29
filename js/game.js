@@ -300,8 +300,8 @@ window.Game = {};
 		this.dy = (ey - (y - yView));
 		this.mag = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
 		this.speed = 700;
-		this.width = 6;
-		this.height = 6;
+		this.width = 4;
+		this.height = 4;
 	}
 	Bullet.prototype.update = function(step)
 	{
@@ -338,6 +338,35 @@ window.Game = {};
 	};
 	// add "class" Player to our Game object
 	Game.Obstacle = Obstacle;
+})();
+//wrapper for "class" Gun
+(function()
+{
+	function Gun(damage, auto, ammo, clip, shots, splash, piercing, price, cooldown, reload, speed)
+	{
+		this.damage = damage;
+		this.auto  = auto;
+		this.ammo = ammo;
+		this.clip = clip;
+		this.shots = shots;
+		this.splash = splash;
+		this.piercing = piercing;
+		this.price = price;
+		this.cooldown = cooldown;
+		this.reload = reload;
+		this.speed = speed;
+	}
+	Game.Gun = Gun;
+})();
+//wrapper for "class" Spawnpoint
+(function()
+{
+	function Spawnpoint(x, y)
+	{
+		this.x = x;
+		this.y = y;
+	}
+	Game.Spawnpoint = Spawnpoint;
 })();
 // wrapper for "class" Map
 (function()
@@ -445,13 +474,13 @@ window.Game = {};
 	var gg = false;
 	var hurtopacity = 0;
 	var roundopacity = 0;
-
 	var room = {
 		width: 1760,
 		height: 880,
 		map: new Game.Map(1760, 880)
 	};
 	room.map.generate();
+	var spawnpoints = [new Game.Spawnpoint(-100,-100), new Game.Spawnpoint(room.width / 2,-100), new Game.Spawnpoint(room.width +100 ,-100), new Game.Spawnpoint(-100,room.height/2),  new Game.Spawnpoint(-100,room.height + 100),  new Game.Spawnpoint(room.width/2,room.height+100),  new Game.Spawnpoint(room.width+100,room.height+100), new Game.Spawnpoint(room.width+100,room.height/2) ];
 	var player = new Game.Player(room.width / 2, room.height / 2);
 	var zombies = [];
 	var obstacles = [];
@@ -519,11 +548,11 @@ window.Game = {};
 	{
 		player.health = player.health - 1;
 		injured();
-		if (player.health == 2)
+		if (player.health === 2)
 		{
 			heart1.style.display = 'None';
 		}
-		else if (player.health == 1)
+		else if (player.health === 1)
 		{
 			heart2.style.display = 'None';
 		}
@@ -601,24 +630,28 @@ window.Game = {};
 	};
 	var zombiespawn = function()
 	{
-		if(spawnnum > 0 && zombies.length <= spawnnum)
+		if(runningId != -1)
 		{
-			zombies.push(new Game.Zombie(Math.floor((Math.random() * room.width) + 1), Math.floor((Math.random() * room.height) + 1), roundnum));
-		}
-		if( spawnnum <= 0)
-		{
-				window.clearInterval(spawner);
-				roundnum +=1;
-				round.style.color =  '#808080';
-				spawntimer = spawntimer - 200;
-				round.innerHTML = "Round:"+roundnum;
-				setTimeout(function()
-					{
-						roundup();
-						spawnnum = roundnum * 7;
-						round.style.color = '#000000';
-						spawner = window.setInterval(zombiespawn, spawntimer);
-					},4000);
+			var spawn = Math.floor(Math.random() * spawnpoints.length);
+			if(spawnnum > 0 && zombies.length <= spawnnum)
+			{
+				zombies.push(new Game.Zombie(spawnpoints[spawn].x,spawnpoints[spawn].y, roundnum));
+			}
+			if( spawnnum <= 0)
+			{
+					clearInterval(spawner);
+					roundnum +=1;
+					round.style.color =  '#808080';
+					spawntimer = spawntimer - 200;
+					round.innerHTML = "Round:"+roundnum;
+					setTimeout(function()
+						{
+							roundup();
+							spawnnum = roundnum * 7;
+							round.style.color = '#000000';
+							spawner = setInterval(zombiespawn, spawntimer);
+						},4000);
+			}
 		}
 	};
 	var zombiehit = function(num)
@@ -740,7 +773,7 @@ window.Game = {};
 	{
 		if (runningId == -1)
 		{
-			spawner = window.setInterval(zombiespawn, spawntimer);
+			spawner = setInterval(zombiespawn, spawntimer);
 			runningId = requestAnimationFrame(gameLoop); // <-- changed
 			console.log("play");
 		}
@@ -755,7 +788,7 @@ window.Game = {};
 		{
 			cancelAnimationFrame(runningId); // <-- changed
 			runningId = -1;
-			window.clearInterval(spawner);
+			clearInterval(spawner);
 			console.log("paused");
 		}
 	};
