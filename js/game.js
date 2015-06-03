@@ -292,7 +292,7 @@ window.Game = {};
 // wrapper for "class" Bullet
 (function()
 {
-	function Bullet(x, y, ex, ey, xView, yView)
+	function Bullet(x, y, ex, ey, xView, yView, gun)
 	{
 		this.x = x;
 		this.y = y;
@@ -345,13 +345,11 @@ window.Game = {};
 	function Gun(damage, auto, ammo, clip, shots, splash, piercing, price, cooldown, reload, speed)
 	{
 		this.damage = damage;
-		this.auto  = auto;
 		this.ammo = ammo;
 		this.clip = clip;
 		this.shots = shots;
 		this.splash = splash;
 		this.piercing = piercing;
-		this.price = price;
 		this.cooldown = cooldown;
 		this.reload = reload;
 		this.speed = speed;
@@ -445,11 +443,29 @@ window.Game = {};
 // Game Script
 (function()
 {
+	var firing;
+	var mousex;
+	var mousey;
 	var canvas = document.getElementById("gameCanvas");
-	canvas.addEventListener("click", function(e)
+	canvas.onmousedown = function (e)
 	{
-		bulletspawn(player.x, player.y, e.pageX - canvas.offsetLeft, e.pageY - canvas.offsetTop, camera.xView, camera.yView);
-	}, false);
+    firing = true;
+    mouseX = e.clientX;
+		mouseY = e.clientY;
+	};
+	canvas.onmouseup = function (e)
+	{
+	  firing = false;
+	};
+	canvas.onmousemove = function (e)
+	{
+    if (firing)
+		{
+			mouseX = e.clientX;
+			mouseY = e.clientY;
+    }
+	};
+
 	var context = canvas.getContext("2d");
 	if (window.innerWidth * 0.8 > 1080)
 	{
@@ -485,6 +501,8 @@ window.Game = {};
 	var zombies = [];
 	var obstacles = [];
 	var shots = [];
+	var guns = [new Game.Gun(1, 64, 8, 1, 0, 0, 0, 2, 700)];
+	var gunner = 0;
 	var camera = new Game.Camera(0, 0, canvas.width, canvas.height, room.width, room.height);
 	var spawntimer = 3000;
 	var spawnnum = 10;
@@ -710,15 +728,20 @@ window.Game = {};
 			}
 		}
 	};
-	var bulletspawn = function(x, y, ex, ey, xv, yv)
+	var bulletspawn = function(x, y, ex, ey, xv, yv, gun)
 	{
-		shots.push(new Game.Bullet(x, y, ex, ey, xv, yv));
+		if (firing)
+		{
+			
+			shots.push(new Game.Bullet(x, y, ex, ey, xv, yv, gun));
+		}
 	};
 	var update = function(step)
 	{
 		player.update(step, room.width, room.height);
 		zombieupdate(step, player.x, player.y);
 		bulletupdate(step);
+		bulletspawn(player.x, player.y, mouseX - canvas.offsetLeft, mouseY - canvas.offsetTop, camera.xView, camera.yView, guns[gunner]);
 		camera.update();
 	};
 	// Game draw function
@@ -798,23 +821,31 @@ Game.controls = {
 	left: false,
 	up: false,
 	right: false,
-	down: false
+	down: false,
+	reload: false,
+	action: false
 };
 window.addEventListener("keydown", function(e)
 {
 	switch (e.keyCode)
 	{
-		case 37: // left arrow
+		case 65: // left arrow
 			Game.controls.left = true;
 			break;
-		case 38: // up arrow
+		case 87: // up arrow
 			Game.controls.up = true;
 			break;
-		case 39: // right arrow
+		case 68: // right arrow
 			Game.controls.right = true;
 			break;
-		case 40: // down arrow
+		case 83: // down arrow
 			Game.controls.down = true;
+			break;
+		case 69: //e key action
+			Game.controls.action = true;
+			break;
+		case 81: //q key reload
+			Game.controls.reload = true;
 			break;
 	}
 }, false);
@@ -822,20 +853,26 @@ window.addEventListener("keyup", function(e)
 {
 	switch (e.keyCode)
 	{
-		case 37: // left arrow
+		case 65: // left arrow
 			Game.controls.left = false;
 			break;
-		case 38: // up arrow
+		case 87: // up arrow
 			Game.controls.up = false;
 			break;
-		case 39: // right arrow
+		case 68: // right arrow
 			Game.controls.right = false;
 			break;
-		case 40: // down arrow
+		case 83: // down arrow
 			Game.controls.down = false;
 			break;
 		case 80: // key P pauses the game
 			Game.togglePause();
+			break;
+		case 69: //e key action
+			Game.controls.action = false;
+			break;
+		case 81: //q key reload
+			Game.controls.reload = false;
 			break;
 	}
 }, false);
