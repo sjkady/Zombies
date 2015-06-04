@@ -154,7 +154,7 @@ window.Game = {};
 		this.width = 40;
 		this.height = 40;
 	}
-	Player.prototype.update = function(step, worldWidth, worldHeight)
+	Player.prototype.update = function(step, worldWidth, worldHeight, obstacles)
 	{
 		// parameter step is the time between frames ( in seconds )
 		// check controls and move the player accordingly
@@ -222,6 +222,28 @@ window.Game = {};
 		{
 			this.y = worldHeight - this.height / 2;
 		}
+		for (var t = obstacles.length-1; t>=0; t--)
+		{
+			if(Math.abs(this.x - obstacles[t].x) < (obstacles[t].width/2 + this.width/2)&& Math.abs(this.y - obstacles[t].y) <= (obstacles[t].height/2 + this.height/2))
+			{
+					if(this.x > obstacles[t].x )
+					{
+						this.x += this.speed * step;
+					}
+					if(this.x < obstacles[t].x )
+					{
+						this.x -= this.speed * step;
+					}
+					if(this.y > obstacles[t].y )
+					{
+						this.y += this.speed * step;
+					}
+					if(this.y < obstacles[t].y )
+					{
+						this.y -= this.speed * step;
+					}
+			}
+		}
 	};
 	Player.prototype.draw = function(context, xView, yView)
 	{
@@ -258,13 +280,35 @@ window.Game = {};
 		this.width = 30;
 		this.height = 30;
 	}
-	Zombie.prototype.update = function(step, playerX, playerY)
+	Zombie.prototype.update = function(step, playerX, playerY, obstacles)
 	{
 	  this.dx = (playerX - this.x);
 		this.dy = (playerY - this.y);
 		this.mag = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
 		this.x+=(this.dx/this.mag)*this.speed * step;
 		this.y+=(this.dy/this.mag)*this.speed * step;
+		for (var t = obstacles.length-1; t>=0; t--)
+		{
+			if(Math.abs(this.x - obstacles[t].x) < (obstacles[t].width/2 + this.width/2)&& Math.abs(this.y - obstacles[t].y) <= (obstacles[t].height/2 + this.height/2))
+			{
+					if(this.x > obstacles[t].x )
+					{
+						this.x += this.speed * step;
+					}
+					if(this.x < obstacles[t].x )
+					{
+						this.x -= this.speed * step;
+					}
+					if(this.y > obstacles[t].y )
+					{
+						this.y += this.speed * step;
+					}
+					if(this.y < obstacles[t].y )
+					{
+						this.y -= this.speed * step;
+					}
+			}
+		}
 	};
 	Zombie.prototype.draw = function(context, xView, yView)
 	{
@@ -326,12 +370,12 @@ window.Game = {};
 // wrapper for "class" Obstacle
 (function()
 {
-	function Obstacle(startx, y, ex, ey, xView, yView)
+	function Obstacle(x, y, width, height)
 	{
 		this.x = x;
 		this.y = y;
-		this.width = 100;
-		this.height = 100;
+		this.width = width;
+		this.height = height;
 	}
 	Obstacle.prototype.draw = function(context, xView, yView)
 	{
@@ -479,8 +523,6 @@ window.Game = {};
 	{
 		firing = false;
 	}, false);
-
-
 	var context = canvas.getContext("2d");
 	if (window.innerWidth * 0.8 > 1080)
 	{
@@ -511,28 +553,13 @@ window.Game = {};
 		map: new Game.Map(1760, 880)
 	};
 
-
 	room.map.generate();
 	var spawnpoints = [new Game.Spawnpoint(-100,-100), new Game.Spawnpoint(room.width / 2,-100), new Game.Spawnpoint(room.width +100 ,-100), new Game.Spawnpoint(-100,room.height/2),  new Game.Spawnpoint(-100,room.height + 100),  new Game.Spawnpoint(room.width/2,room.height+100),  new Game.Spawnpoint(room.width+100,room.height+100), new Game.Spawnpoint(room.width+100,room.height/2) ];
 	var player = new Game.Player(room.width / 2, room.height / 2);
 	var zombies = [];
-	var obstacles = [];
+	var obstacles = [new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),100,100),new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),100,100),new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),100,100),new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),100,100)];
 	var shots = [];
-	var guns = [new Game.Gun('pistol', 1, 64, 8, 1, 0, 0, 1, 2, 700,4,4)];//give defualt pistol
-	/*
-	this.name = name;
-	this.damage = damage;
-	this.ammo = ammo;
-	this.clip = clip;
-	this.shots = shots;
-	this.splash = splash;
-	this.piercing = piercing;
-	this.cooldown = cooldown;
-	this.reload = reload;
-	this.speed = speed;
-	this.width = width;
-	this.height = height;
-	*/
+	var guns = [new Game.Gun('pistol', 1, 64, 8, 1, 0, 0, 1, 2, 700,3,3)];//give defualt pistol
 	var gunner = 0;
 	var camera = new Game.Camera(0, 0, canvas.width, canvas.height, room.width, room.height);
 	var spawntimer = 3000;
@@ -674,7 +701,7 @@ window.Game = {};
 					zombieattack(i);
 				}
 			}
-			zombies[i].update(step, player.x, player.y);
+			zombies[i].update(step, player.x, player.y, obstacles);
 		}
 	};
 	var zombiespawn = function()
@@ -705,7 +732,6 @@ window.Game = {};
 	};
 	var zombiehit = function(num)
 	{
-
 		zombies[num].hit = true;
 		setTimeout(function()
 		{
@@ -765,15 +791,30 @@ window.Game = {};
 	};
 	var bulletspawn = function(x, y, ex, ey, xv, yv, gun)
 	{
+		/*
+		this.name = name;
+		this.damage = damage;
+		this.ammo = ammo;
+		this.clip = clip;
+		this.shots = shots;
+		this.splash = splash;
+		this.piercing = piercing;
+		this.cooldown = cooldown;
+		this.reload = reload;
+		this.speed = speed;
+		this.width = width;
+		this.height = height;
+		*/
 		if(cooldown <= 0)
 		{
+
 				shots.push(new Game.Bullet(x, y, ex, ey, xv, yv, gun));
 				cooldown = gun.cooldown;
 		}
 	};
 	var update = function(step)
 	{
-		player.update(step, room.width, room.height);
+		player.update(step, room.width, room.height, obstacles);
 		zombieupdate(step, player.x, player.y);
 		bulletupdate(step);
 		if (firing)
@@ -809,6 +850,10 @@ window.Game = {};
 		for (var j = shots.length - 1; j >= 0; j--)
 		{
 			shots[j].draw(context, camera.xView, camera.yView);
+		}
+		for (var t = obstacles.length-1; t>=0; t--)
+		{
+			obstacles[t].draw(context, camera.xView, camera.yView);
 		}
 	};
 
