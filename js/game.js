@@ -299,9 +299,13 @@ window.Game = {};
 		this.dx = (ex - (x - xView));
 		this.dy = (ey - (y - yView));
 		this.mag = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
-		this.speed = 700;
-		this.width = 4;
-		this.height = 4;
+		this.speed = gun.speed;
+		this.width = gun.width;
+		this.height = gun.height;
+		this.damage = gun.damage;
+		this.splash = gun.splash;
+		this.piercing = gun.piercing;
+		this.shots = gun.shots;
 	}
 	Bullet.prototype.update = function(step)
 	{
@@ -342,8 +346,9 @@ window.Game = {};
 //wrapper for "class" Gun
 (function()
 {
-	function Gun(damage, auto, ammo, clip, shots, splash, piercing, price, cooldown, reload, speed)
+	function Gun(name, damage, ammo, clip, shots, splash, piercing, cooldown, reload, speed, width, height)
 	{
+		this.name = name;
 		this.damage = damage;
 		this.ammo = ammo;
 		this.clip = clip;
@@ -353,6 +358,8 @@ window.Game = {};
 		this.cooldown = cooldown;
 		this.reload = reload;
 		this.speed = speed;
+		this.width = width;
+		this.height = height;
 	}
 	Game.Gun = Gun;
 })();
@@ -446,25 +453,33 @@ window.Game = {};
 	var firing;
 	var mousex;
 	var mousey;
+	var cooldown = 0;
 	var canvas = document.getElementById("gameCanvas");
-	canvas.onmousedown = function (e)
+	canvas.addEventListener("mousedown",  function(e)
 	{
-    firing = true;
-    mouseX = e.clientX;
-		mouseY = e.clientY;
-	};
-	canvas.onmouseup = function (e)
-	{
-	  firing = false;
-	};
-	canvas.onmousemove = function (e)
-	{
-    if (firing)
+		firing = true;
+		if (e.clientX !== undefined && e.clientY !== undefined)
 		{
-			mouseX = e.clientX;
-			mouseY = e.clientY;
-    }
-	};
+			mousex = e.clientX;
+			mousey = e.clientY;
+		}
+	}, false);
+	canvas.addEventListener("mousemove", function(e)
+	{
+		if(firing)
+		{
+			if (e.clientX !== undefined && e.clientY !== undefined)
+			{
+				mousex = e.clientX;
+				mousey = e.clientY;
+			}
+		}
+	}, false);
+	canvas.addEventListener("mouseup", function(e)
+	{
+		firing = false;
+	}, false);
+
 
 	var context = canvas.getContext("2d");
 	if (window.innerWidth * 0.8 > 1080)
@@ -495,13 +510,29 @@ window.Game = {};
 		height: 880,
 		map: new Game.Map(1760, 880)
 	};
+
+
 	room.map.generate();
 	var spawnpoints = [new Game.Spawnpoint(-100,-100), new Game.Spawnpoint(room.width / 2,-100), new Game.Spawnpoint(room.width +100 ,-100), new Game.Spawnpoint(-100,room.height/2),  new Game.Spawnpoint(-100,room.height + 100),  new Game.Spawnpoint(room.width/2,room.height+100),  new Game.Spawnpoint(room.width+100,room.height+100), new Game.Spawnpoint(room.width+100,room.height/2) ];
 	var player = new Game.Player(room.width / 2, room.height / 2);
 	var zombies = [];
 	var obstacles = [];
 	var shots = [];
-	var guns = [new Game.Gun(1, 64, 8, 1, 0, 0, 0, 2, 700)];
+	var guns = [new Game.Gun('pistol', 1, 64, 8, 1, 0, 0, 1, 2, 700,4,4)];//give defualt pistol
+	/*
+	this.name = name;
+	this.damage = damage;
+	this.ammo = ammo;
+	this.clip = clip;
+	this.shots = shots;
+	this.splash = splash;
+	this.piercing = piercing;
+	this.cooldown = cooldown;
+	this.reload = reload;
+	this.speed = speed;
+	this.width = width;
+	this.height = height;
+	*/
 	var gunner = 0;
 	var camera = new Game.Camera(0, 0, canvas.width, canvas.height, room.width, room.height);
 	var spawntimer = 3000;
@@ -727,13 +758,17 @@ window.Game = {};
 				}
 			}
 		}
+		if(cooldown>=0)
+		{
+			cooldown -=step;
+		}
 	};
 	var bulletspawn = function(x, y, ex, ey, xv, yv, gun)
 	{
-		if (firing)
+		if(cooldown <= 0)
 		{
-			
-			shots.push(new Game.Bullet(x, y, ex, ey, xv, yv, gun));
+				shots.push(new Game.Bullet(x, y, ex, ey, xv, yv, gun));
+				cooldown = gun.cooldown;
 		}
 	};
 	var update = function(step)
@@ -741,7 +776,10 @@ window.Game = {};
 		player.update(step, room.width, room.height);
 		zombieupdate(step, player.x, player.y);
 		bulletupdate(step);
-		bulletspawn(player.x, player.y, mouseX - canvas.offsetLeft, mouseY - canvas.offsetTop, camera.xView, camera.yView, guns[gunner]);
+		if (firing)
+		{
+			bulletspawn(player.x, player.y, mousex - canvas.offsetLeft, mousey - canvas.offsetTop, camera.xView, camera.yView, guns[gunner]);
+		}
 		camera.update();
 	};
 	// Game draw function
