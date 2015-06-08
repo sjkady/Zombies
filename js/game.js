@@ -285,30 +285,30 @@ window.Game = {};
 	  this.dx = (playerX - this.x);
 		this.dy = (playerY - this.y);
 		this.mag = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
-		this.x+=(this.dx/this.mag)*this.speed * step;
-		this.y+=(this.dy/this.mag)*this.speed * step;
 		for (var t = obstacles.length-1; t>=0; t--)
 		{
 			if(Math.abs(this.x - obstacles[t].x) < (obstacles[t].width/2 + this.width/2)&& Math.abs(this.y - obstacles[t].y) <= (obstacles[t].height/2 + this.height/2))
 			{
 					if(this.x > obstacles[t].x )
 					{
-						this.x += this.speed * step;
+						this.x += this.speed * step * 1.5;
 					}
 					if(this.x < obstacles[t].x )
 					{
-						this.x -= this.speed * step;
+						this.x -= this.speed * step * 1.5;
 					}
 					if(this.y > obstacles[t].y )
 					{
-						this.y += this.speed * step;
+						this.y += this.speed * step * 1.5;
 					}
 					if(this.y < obstacles[t].y )
 					{
-						this.y -= this.speed * step;
+						this.y -= this.speed * step * 1.5;
 					}
 			}
 		}
+		this.x+=(this.dx/this.mag)*this.speed * step;
+		this.y+=(this.dy/this.mag)*this.speed * step;
 	};
 	Zombie.prototype.draw = function(context, xView, yView)
 	{
@@ -557,7 +557,7 @@ window.Game = {};
 	var spawnpoints = [new Game.Spawnpoint(-100,-100), new Game.Spawnpoint(room.width / 2,-100), new Game.Spawnpoint(room.width +100 ,-100), new Game.Spawnpoint(-100,room.height/2),  new Game.Spawnpoint(-100,room.height + 100),  new Game.Spawnpoint(room.width/2,room.height+100),  new Game.Spawnpoint(room.width+100,room.height+100), new Game.Spawnpoint(room.width+100,room.height/2) ];
 	var player = new Game.Player(room.width / 2, room.height / 2);
 	var zombies = [];
-	var obstacles = [new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),100,100),new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),100,100),new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),100,100),new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),100,100)];
+	var obstacles = [new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),Math.floor(Math.random() * 400),Math.floor(Math.random() * 400)),new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),Math.floor(Math.random() * 400),Math.floor(Math.random() * 400)),new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),Math.floor(Math.random() * 400),Math.floor(Math.random() * 400)),new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),Math.floor(Math.random() * 400),Math.floor(Math.random() * 400))];
 	var shots = [];
 	var guns = [new Game.Gun('pistol', 1, 64, 8, 1, 0, 0, 1, 2, 700,3,3)];//give defualt pistol
 	var gunner = 0;
@@ -665,6 +665,7 @@ window.Game = {};
 	{
 		for (var i = zombies.length - 1; i >= 0; i--)
 		{
+			zombies[i].update(step, player.x, player.y, obstacles);
 			for (var g = zombies.length - 1; g >= 0; g--)
 			{
 				if (i != g)
@@ -673,23 +674,23 @@ window.Game = {};
 					{
 						if (zombies[i].x > zombies[g].x)
 						{
-							zombies[i].x = zombies[i].x + 1;
-							zombies[g].x = zombies[g].x - 1;
+							zombies[i].x += 1;
+							zombies[g].x -= 1;
 						}
 						if (zombies[g].x > zombies[i].x)
 						{
-							zombies[g].x = zombies[g].x + 1;
-							zombies[i].x = zombies[i].x - 1;
+							zombies[g].x += 1;
+							zombies[i].x -= 1;
 						}
 						if (zombies[i].y > zombies[g].y)
 						{
-							zombies[i].y = zombies[i].y + 1;
-							zombies[g].y = zombies[g].y - 1;
+							zombies[i].y += 1;
+							zombies[g].y -= 1;
 						}
 						if (zombies[g].y > zombies[i].y)
 						{
-							zombies[g].y = zombies[g].y + 1;
-							zombies[i].y = zombies[i].y - 1;
+							zombies[g].y += 1;
+							zombies[i].y -= 1;
 						}
 					}
 				}
@@ -701,7 +702,6 @@ window.Game = {};
 					zombieattack(i);
 				}
 			}
-			zombies[i].update(step, player.x, player.y, obstacles);
 		}
 	};
 	var zombiespawn = function()
@@ -783,7 +783,23 @@ window.Game = {};
 					shots.splice(i, 1);
 				}
 			}
+			for (var l = obstacles.length -1 ; l >= 0; l--)
+			{
+				if (typeof shots[i] != "undefined")
+				{
+					if(Math.abs(shots[i].x - obstacles[l].x) < (obstacles[l].width/2 + shots[i].width/2)&& Math.abs(shots[i].y - obstacles[l].y) <= (obstacles[l].height/2 + shots[i].height/2))
+					{
+						shots.splice(i, 1);
+					}
+					else if (shots[i].y > Map.height || shots[i].y < 0)
+					{
+						shots.splice(i, 1);
+					}
+				}
+			}
 		}
+
+
 		if(cooldown>=0)
 		{
 			cooldown -=step;
