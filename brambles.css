@@ -143,6 +143,8 @@ body {
   margin-left: auto;
   margin-right: auto;
   width: 65%;
+  color: #282e25;
+  font-weight: 900;
 }
 
 #kills
@@ -153,6 +155,7 @@ body {
   width: 200px;
   display:inline-block;
   text-align: left;
+  color:#282e25;
 }
 #points
 {
@@ -162,6 +165,7 @@ body {
   width: 250px;
   display:inline-block;
   text-align: left;
+  color: #282e25;
 }
 #round
 {
@@ -171,6 +175,7 @@ body {
   width: 200px;
   display:inline-block;
   text-align: left;
+  color: #282e25;
 }
 
 

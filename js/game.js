@@ -1,9 +1,14 @@
 //animation frame wrapper
-(function()
+(function ()
 {
 	var lastTime = 0;
 	var currTime, timeToCall, id;
-	var vendors = ['ms', 'moz', 'webkit', 'o'];
+	var vendors = [
+		'ms',
+		'moz',
+		'webkit',
+		'o'
+	];
 	for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x)
 	{
 		window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
@@ -11,11 +16,11 @@
 	}
 	if (!window.requestAnimationFrame)
 	{
-		window.requestAnimationFrame = function(callback, element)
+		window.requestAnimationFrame = function (callback, element)
 		{
 			currTime = Date.now();
 			timeToCall = Math.max(0, 16 - (currTime - lastTime));
-			id = window.setTimeout(function()
+			id = window.setTimeout(function ()
 			{
 				callback(currTime + timeToCall);
 			}, timeToCall);
@@ -25,16 +30,16 @@
 	}
 	if (!window.cancelAnimationFrame)
 	{
-		window.cancelAnimationFrame = function(id)
+		window.cancelAnimationFrame = function (id)
 		{
 			clearTimeout(id);
 		};
 	}
-})();
+}());
 // wrapper for our game "classes", "methods" and "objects"
 window.Game = {};
 // wrapper for "class" Rectangle
-(function()
+(function ()
 {
 	function Rectangle(left, top, width, height)
 	{
@@ -45,65 +50,67 @@ window.Game = {};
 		this.right = this.left + this.width;
 		this.bottom = this.top + this.height;
 	}
-	Rectangle.prototype.set = function(left, top, /*optional*/ width, /*optional*/ height)
+	Rectangle.prototype.set = function (left, top, width, height)
 	{
 		this.left = left;
 		this.top = top;
 		this.width = width || this.width;
 		this.height = height || this.height;
-		this.right = (this.left + this.width);
-		this.bottom = (this.top + this.height);
+		this.right = this.left + this.width;
+		this.bottom = this.top + this.height;
 	};
-	Rectangle.prototype.within = function(r)
+	Rectangle.prototype.within = function (r)
 	{
-		return (r.left <= this.left && r.right >= this.right && r.top <= this.top && r.bottom >= this.bottom);
+		return r.left <= this.left && r.right >= this.right && r.top <= this.top && r.bottom >= this.bottom;
 	};
-	Rectangle.prototype.overlaps = function(r)
+	Rectangle.prototype.overlaps = function (r)
 	{
-		return (this.left < r.right && r.left < this.right && this.top < r.bottom && r.top < this.bottom);
+		return this.left < r.right && r.left < this.right && this.top < r.bottom && r.top < this.bottom;
 	};
 	// add "class" Rectangle to our Game object
 	Game.Rectangle = Rectangle;
-})();
+}());
 // wrapper for "class" Camera (avoid global objects)
-(function()
+(function ()
 {
 	// possibles axis to move the camera
 	var AXIS = {
-		NONE: "none",
-		HORIZONTAL: "horizontal",
-		VERTICAL: "vertical",
-		BOTH: "both"
+		NONE: 'none',
+		HORIZONTAL: 'horizontal',
+		VERTICAL: 'vertical',
+		BOTH: 'both'
 	};
 	// Camera constructor
 	function Camera(xView, yView, canvasWidth, canvasHeight, worldWidth, worldHeight)
-		{
-			// position of camera (left-top coordinate)
-			this.xView = xView || 0;
-			this.yView = yView || 0;
-			// distance from followed object to border before camera starts move
-			this.xDeadZone = 0; // min distance to horizontal borders
-			this.yDeadZone = 0; // min distance to vertical borders
-			// viewport dimensions
-			this.wView = canvasWidth;
-			this.hView = canvasHeight;
-			// allow camera to move in vertical and horizontal axis
-			this.axis = AXIS.BOTH;
-			// object that should be followed
-			this.followed = null;
-			// rectangle that represents the viewport
-			this.viewportRect = new Game.Rectangle(this.xView, this.yView, this.wView, this.hView);
-			// rectangle that represents the world's boundary (room's boundary)
-			this.worldRect = new Game.Rectangle(0, 0, worldWidth, worldHeight);
-		}
-		// gameObject needs to have "x" and "y" properties (as world(or room) position)
-	Camera.prototype.follow = function(gameObject, xDeadZone, yDeadZone)
+	{
+		// position of camera (left-top coordinate)
+		this.xView = xView || 0;
+		this.yView = yView || 0;
+		// distance from followed object to border before camera starts move
+		this.xDeadZone = 0;
+		// min distance to horizontal borders
+		this.yDeadZone = 0;
+		// min distance to vertical borders
+		// viewport dimensions
+		this.wView = canvasWidth;
+		this.hView = canvasHeight;
+		// allow camera to move in vertical and horizontal axis
+		this.axis = AXIS.BOTH;
+		// object that should be followed
+		this.followed = null;
+		// rectangle that represents the viewport
+		this.viewportRect = new Game.Rectangle(this.xView, this.yView, this.wView, this.hView);
+		// rectangle that represents the world's boundary (room's boundary)
+		this.worldRect = new Game.Rectangle(0, 0, worldWidth, worldHeight);
+	}
+	// gameObject needs to have "x" and "y" properties (as world(or room) position)
+	Camera.prototype.follow = function (gameObject, xDeadZone, yDeadZone)
 	{
 		this.followed = gameObject;
 		this.xDeadZone = xDeadZone;
 		this.yDeadZone = yDeadZone;
 	};
-	Camera.prototype.update = function()
+	Camera.prototype.update = function ()
 	{
 		// keep following the player (or other desired object)
 		if (this.followed !== null)
@@ -111,14 +118,26 @@ window.Game = {};
 			if (this.axis == AXIS.HORIZONTAL || this.axis == AXIS.BOTH)
 			{
 				// moves camera on horizontal axis based on followed object position
-				if (this.followed.x - this.xView + this.xDeadZone > this.wView) this.xView = this.followed.x - (this.wView - this.xDeadZone);
-				else if (this.followed.x - this.xDeadZone < this.xView) this.xView = this.followed.x - this.xDeadZone;
+				if (this.followed.x - this.xView + this.xDeadZone > this.wView)
+				{
+					this.xView = this.followed.x - (this.wView - this.xDeadZone);
+				}
+				else if (this.followed.x - this.xDeadZone < this.xView)
+				{
+					this.xView = this.followed.x - this.xDeadZone;
+				}
 			}
 			if (this.axis == AXIS.VERTICAL || this.axis == AXIS.BOTH)
 			{
 				// moves camera on vertical axis based on followed object position
-				if (this.followed.y - this.yView + this.yDeadZone > this.hView) this.yView = this.followed.y - (this.hView - this.yDeadZone);
-				else if (this.followed.y - this.yDeadZone < this.yView) this.yView = this.followed.y - this.yDeadZone;
+				if (this.followed.y - this.yView + this.yDeadZone > this.hView)
+				{
+					this.yView = this.followed.y - (this.hView - this.yDeadZone);
+				}
+				else if (this.followed.y - this.yDeadZone < this.yView)
+				{
+					this.yView = this.followed.y - this.yDeadZone;
+				}
 			}
 		}
 		// update viewportRect
@@ -126,17 +145,21 @@ window.Game = {};
 		// don't let camera leaves the world's boundary
 		if (!this.viewportRect.within(this.worldRect))
 		{
-			if (this.viewportRect.left < this.worldRect.left) this.xView = this.worldRect.left;
-			if (this.viewportRect.top < this.worldRect.top) this.yView = this.worldRect.top;
-			if (this.viewportRect.right > this.worldRect.right) this.xView = this.worldRect.right - this.wView;
-			if (this.viewportRect.bottom > this.worldRect.bottom) this.yView = this.worldRect.bottom - this.hView;
+			if (this.viewportRect.left < this.worldRect.left)
+				this.xView = this.worldRect.left;
+			if (this.viewportRect.top < this.worldRect.top)
+				this.yView = this.worldRect.top;
+			if (this.viewportRect.right > this.worldRect.right)
+				this.xView = this.worldRect.right - this.wView;
+			if (this.viewportRect.bottom > this.worldRect.bottom)
+				this.yView = this.worldRect.bottom - this.hView;
 		}
 	};
 	// add "class" Camera to our Game object
 	Game.Camera = Camera;
-})();
+}());
 // wrapper for "class" Player
-(function()
+(function ()
 {
 	function Player(x, y)
 	{
@@ -145,120 +168,118 @@ window.Game = {};
 		// it represents the player position on the world(room), not the canvas position
 		this.x = x;
 		this.y = y;
+		this.prex = x;
+		this.prey = y;
 		this.health = 3;
 		this.kills = 0;
 		this.points = 0;
+		this.move = true;
 		// move speed in pixels per second
 		this.speed = 300;
 		// render properties
 		this.width = 40;
 		this.height = 40;
 	}
-	Player.prototype.update = function(step, worldWidth, worldHeight, obstacles)
+	Player.prototype.update = function (step, worldWidth, worldHeight, obstacles)
 	{
 		// parameter step is the time between frames ( in seconds )
 		// check controls and move the player accordingly
-		if (this.health >= 0)
+		if (this.health >= 0 && this.move === true)
 		{
 			if (Game.controls.left)
 			{
-				if(Game.controls.up || Game.controls.down)
+				if (Game.controls.up || Game.controls.down)
 				{
-					this.x -= this.speed / Math.sqrt(2)* step;
+					this.prex -= this.speed / Math.sqrt(2) * step;
 				}
 				else
 				{
-					this.x -= this.speed * step;
+					this.prex -= this.speed * step;
 				}
 			}
 			if (Game.controls.right)
 			{
-				if(Game.controls.up || Game.controls.down)
+				if (Game.controls.up || Game.controls.down)
 				{
-					this.x += this.speed / Math.sqrt(2) * step;
+					this.prex += this.speed / Math.sqrt(2) * step;
 				}
 				else
 				{
-					this.x += this.speed * step;
+					this.prex += this.speed * step;
 				}
 			}
 			if (Game.controls.up)
 			{
-				if(Game.controls.right || Game.controls.left)
+				if (Game.controls.right || Game.controls.left)
 				{
-				 	this.y -= this.speed / Math.sqrt(2) * step;
+					this.prey -= this.speed / Math.sqrt(2) * step;
 				}
 				else
 				{
-					this.y -= this.speed * step;
+					this.prey -= this.speed * step;
 				}
 			}
 			if (Game.controls.down)
 			{
-				if(Game.controls.right || Game.controls.left)
+				if (Game.controls.right || Game.controls.left)
 				{
-					this.y += this.speed / Math.sqrt(2) * step;
+					this.prey += this.speed / Math.sqrt(2) * step;
 				}
 				else
 				{
-					this.y += this.speed * step;
+					this.prey += this.speed * step;
 				}
 			}
 		}
-		// don't let player leaves the world's boundary
-		if (this.x - this.width / 2 < 0)
+		if (this.prex - this.width / 2 < 0)
 		{
-			this.x = this.width / 2;
+			this.prex = this.width / 2;
 		}
-		if (this.y - this.height / 2 < 0)
+		if (this.prey - this.height / 2 < 0)
 		{
-			this.y = this.height / 2;
+			this.prey = this.height / 2;
 		}
-		if (this.x + this.width / 2 > worldWidth)
+		if (this.prex + this.width / 2 > worldWidth)
 		{
-			this.x = worldWidth - this.width / 2;
+			this.prex = worldWidth - this.width / 2;
 		}
-		if (this.y + this.height / 2 > worldHeight)
+		if (this.prey + this.height / 2 > worldHeight)
 		{
-			this.y = worldHeight - this.height / 2;
+			this.prey = worldHeight - this.height / 2;
 		}
-		for (var t = obstacles.length-1; t>=0; t--)
+		for (var t = obstacles.length - 1; t >= 0; t--)
 		{
-			if(Math.abs(this.x - obstacles[t].x) < (obstacles[t].width/2 + this.width/2)&& Math.abs(this.y - obstacles[t].y) <= (obstacles[t].height/2 + this.height/2))
+			if (Math.abs(this.prex - obstacles[t].x) <= obstacles[t].width / 2 + this.width / 2 && Math.abs(this.prey - obstacles[t].y) <= obstacles[t].height / 2 + this.height / 2)
 			{
-					if(this.x > obstacles[t].x )
-					{
-						this.x += this.speed * step;
-					}
-					if(this.x < obstacles[t].x )
-					{
-						this.x -= this.speed * step;
-					}
-					if(this.y > obstacles[t].y )
-					{
-						this.y += this.speed * step;
-					}
-					if(this.y < obstacles[t].y )
-					{
-						this.y -= this.speed * step;
-					}
+				this.move = false;
 			}
 		}
+		if (this.move === true)
+		{
+			this.x = this.prex;
+			this.y = this.prey;
+		}
+		else
+		{
+			this.prex = this.x;
+			this.prey = this.y;
+			this.move = true;
+		}
 	};
-	Player.prototype.draw = function(context, xView, yView)
+	Player.prototype.draw = function (context, xView, yView)
 	{
 		// draw a simple rectangle shape as our player model
 		context.save();
-		context.fillStyle = "#E5C298";
+		context.fillStyle = '#E5C298';
 		// before draw we need to convert player world's position to canvas position
-		context.fillRect((this.x - this.width / 2) - xView, (this.y - this.height / 2) - yView, this.width, this.height);
+		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
 		context.restore();
 	};
 	// add "class" Player to our Game object
 	Game.Player = Player;
-})();
+}());
 // wrapper for "class" Zombie
-(function()
+(function ()
 {
 	function Zombie(x, y, health)
 	{
@@ -267,81 +288,97 @@ window.Game = {};
 		// it represents the player position on the world(room), not the canvas position
 		this.x = x;
 		this.y = y;
+		this.prex = x;
+		this.prey = y;
 		this.dx = 0;
 		this.dy = 0;
 		this.mag = 0;
 		this.health = health;
 		this.attackable = true;
 		this.hit = false;
-		this.cooldown = Math.floor((Math.random() * 3) + 1) * 1000;
+		this.movex = true;
+		this.movey = true;
+		this.cooldown = Math.floor(Math.random() * 3 + 1) * 1000;
 		// move speed in pixels per second
-		this.speed = Math.floor((Math.random() * 200) + 50);
+		this.speed = Math.floor(Math.random() * 200 + 50);
 		// render properties
 		this.width = 30;
 		this.height = 30;
 	}
-	Zombie.prototype.update = function(step, playerX, playerY, obstacles)
+	Zombie.prototype.update = function (step, playerX, playerY, obstacles)
 	{
-	  this.dx = (playerX - this.x);
-		this.dy = (playerY - this.y);
+		this.dx = playerX - this.x;
+		this.dy = playerY - this.y;
 		this.mag = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
-		for (var t = obstacles.length-1; t>=0; t--)
+		this.prex += this.dx / this.mag * this.speed * step;
+		for (var t = obstacles.length - 1; t >= 0; t--)
 		{
-			if(Math.abs(this.x - obstacles[t].x) < (obstacles[t].width/2 + this.width/2)&& Math.abs(this.y - obstacles[t].y) <= (obstacles[t].height/2 + this.height/2))
+			if (Math.abs(this.prex - obstacles[t].x) <= obstacles[t].width / 2 + this.width / 2 && Math.abs(this.prey - obstacles[t].y) <= obstacles[t].height / 2 + this.height / 2)
 			{
-					if(this.x > obstacles[t].x )
-					{
-						this.x += this.speed * step * 1.5;
-					}
-					if(this.x < obstacles[t].x )
-					{
-						this.x -= this.speed * step * 1.5;
-					}
-					if(this.y > obstacles[t].y )
-					{
-						this.y += this.speed * step * 1.5;
-					}
-					if(this.y < obstacles[t].y )
-					{
-						this.y -= this.speed * step * 1.5;
-					}
+				this.movex = false;
+				this.prex -= this.dx / this.mag * this.speed * step;
 			}
 		}
-		this.x+=(this.dx/this.mag)*this.speed * step;
-		this.y+=(this.dy/this.mag)*this.speed * step;
-	};
-	Zombie.prototype.draw = function(context, xView, yView)
-	{
-		// draw a simple rectangle shape as our player model
-		context.save();
-		if(this.hit===true)
+		this.prey += this.dy / this.mag * this.speed * step;
+		for (var k = obstacles.length - 1; k >= 0; k--)
 		{
-			context.fillStyle = "#8A0707";
+			if (Math.abs(this.prex - obstacles[k].x) <= obstacles[k].width / 2 + this.width / 2 && Math.abs(this.prey - obstacles[k].y) <= obstacles[k].height / 2 + this.height / 2)
+			{
+				this.movey = false;
+				this.prey -= this.dy / this.mag * this.speed * step;
+			}
 		}
-		else if (this.attackable === true)
+		if (this.movex === true)
 		{
-			context.fillStyle = "#565e20";
+			this.x = this.prex;
 		}
 		else
 		{
-			context.fillStyle = "#D7EB10";
+			this.prex = this.x;
+			this.movex = true;
+		}
+		if (this.movey === true)
+		{
+			this.y = this.prey;
+		}
+		else
+		{
+			this.prey = this.y;
+			this.movey = true;
+		}
+	};
+	Zombie.prototype.draw = function (context, xView, yView)
+	{
+		// draw a simple rectangle shape as our player model
+		context.save();
+		if (this.hit === true)
+		{
+			context.fillStyle = '#8A0707';
+		}
+		else if (this.attackable === true)
+		{
+			context.fillStyle = '#A2AD59';
+		}
+		else
+		{
+			context.fillStyle = '#8E936D';
 		}
 		// before draw we need to convert player world's position to canvas position
-		context.fillRect((this.x - this.width / 2) - xView, (this.y - this.height / 2) - yView, this.width, this.height);
+		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
 		context.restore();
 	};
 	// add "class" Player to our Game object
 	Game.Zombie = Zombie;
-})();
+}());
 // wrapper for "class" Bullet
-(function()
+(function ()
 {
 	function Bullet(x, y, ex, ey, xView, yView, gun)
 	{
 		this.x = x;
 		this.y = y;
-		this.dx = (ex - (x - xView));
-		this.dy = (ey - (y - yView));
+		this.dx = ex - (x - xView);
+		this.dy = ey - (y - yView);
 		this.mag = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
 		this.speed = gun.speed;
 		this.width = gun.width;
@@ -351,24 +388,24 @@ window.Game = {};
 		this.piercing = gun.piercing;
 		this.shots = gun.shots;
 	}
-	Bullet.prototype.update = function(step)
+	Bullet.prototype.update = function (step)
 	{
 		// parameter step is the time between frames ( in seconds )
-		this.x += (this.dx / this.mag) * this.speed * step;
-		this.y += (this.dy / this.mag) * this.speed * step;
+		this.x += this.dx / this.mag * this.speed * step;
+		this.y += this.dy / this.mag * this.speed * step;
 	};
-	Bullet.prototype.draw = function(context, xView, yView)
+	Bullet.prototype.draw = function (context, xView, yView)
 	{
 		context.save();
-		context.fillStyle = "#C87533";
-		context.fillRect((this.x - this.width / 2) - xView, (this.y - this.height / 2) - yView, this.width, this.height);
+		context.fillStyle = '#E4CE37';
+		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
 		context.restore();
 	};
 	// add "class" Player to our Game object
 	Game.Bullet = Bullet;
-})();
+}());
 // wrapper for "class" Obstacle
-(function()
+(function ()
 {
 	function Obstacle(x, y, width, height)
 	{
@@ -377,18 +414,18 @@ window.Game = {};
 		this.width = width;
 		this.height = height;
 	}
-	Obstacle.prototype.draw = function(context, xView, yView)
+	Obstacle.prototype.draw = function (context, xView, yView)
 	{
 		context.save();
-		context.fillStyle = "#7765e3";
-		context.fillRect((this.x - this.width / 2) - xView, (this.y - this.height / 2) - yView, this.width, this.height);
+		context.fillStyle = '#584D3D';
+		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
 		context.restore();
 	};
 	// add "class" Player to our Game object
 	Game.Obstacle = Obstacle;
-})();
+}());
 //wrapper for "class" Gun
-(function()
+(function ()
 {
 	function Gun(name, damage, ammo, clip, shots, splash, piercing, cooldown, reload, speed, width, height)
 	{
@@ -406,9 +443,9 @@ window.Game = {};
 		this.height = height;
 	}
 	Game.Gun = Gun;
-})();
+}());
 //wrapper for "class" Spawnpoint
-(function()
+(function ()
 {
 	function Spawnpoint(x, y)
 	{
@@ -416,29 +453,41 @@ window.Game = {};
 		this.y = y;
 	}
 	Game.Spawnpoint = Spawnpoint;
-})();
+}());
+//wrapper for "class" GunBuy
+(function ()
+{
+	function GunBuy(x, y)
+	{
+		this.x = x;
+		this.y = y;
+		this.width = 100;
+		this.height = 100;
+	}
+	Game.GunBuy = GunBuy;
+}());
 // wrapper for "class" Map
-(function()
+(function ()
 {
 	function Map(width, height)
-		{
-			// map dimensions
-			this.width = width;
-			this.height = height;
-			// map texture
-			this.image = null;
-		}
-		// generate an example of a large map
-	Map.prototype.generate = function()
 	{
-		var ctx = document.createElement("canvas").getContext("2d");
+		// map dimensions
+		this.width = width;
+		this.height = height;
+		// map texture
+		this.image = null;
+	}
+	// generate an example of a large map
+	Map.prototype.generate = function ()
+	{
+		var ctx = document.createElement('canvas').getContext('2d');
 		ctx.canvas.width = this.width;
 		ctx.canvas.height = this.height;
-		var rows = ~~(this.width / 44) + 1;
-		var columns = ~~(this.height / 44) + 1;
-		var color = "#e0e0e0";
+		var rows = Math.floor(this.width / 44) + 1;
+		var columns = Math.floor(this.height / 44) + 1;
+		var color = '#CEDFD9';
 		ctx.save();
-		ctx.fillStyle = "#e0e0e0";
+		ctx.fillStyle = '#CEDFD9';
 		for (var x = 0, i = 0; i < rows; x += 44, i++)
 		{
 			ctx.beginPath();
@@ -446,7 +495,7 @@ window.Game = {};
 			{
 				ctx.rect(x, y, 40, 40);
 			}
-			color = (color == "#e0e0e0" ? "#dbdbdb" : "#e0e0e0");
+			color = color == '#CEDFD9' ? '#EBFCFB' : '#CEDFD9';
 			ctx.fillStyle = color;
 			ctx.fill();
 			ctx.closePath();
@@ -454,11 +503,11 @@ window.Game = {};
 		ctx.restore();
 		// store the generate map as this image texture
 		this.image = new Image();
-		this.image.src = ctx.canvas.toDataURL("image/png");
+		this.image.src = ctx.canvas.toDataURL('image/png');
 		// clear context
 		ctx = null;
 	};
-	Map.prototype.draw = function(context, xView, yView)
+	Map.prototype.draw = function (context, xView, yView)
 	{
 		// easiest way: draw the entire map changing only the destination coordinate in canvas
 		// canvas will cull the image by itself (no performance gaps -> in hardware accelerated environments, at least)
@@ -490,16 +539,16 @@ window.Game = {};
 		context.drawImage(this.image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
 	};
 	Game.Map = Map;
-})();
+}());
 // Game Script
-(function()
+(function ()
 {
 	var firing;
 	var mousex;
 	var mousey;
 	var cooldown = 0;
-	var canvas = document.getElementById("gameCanvas");
-	canvas.addEventListener("mousedown",  function(e)
+	var canvas = document.getElementById('gameCanvas');
+	canvas.addEventListener('mousedown', function (e)
 	{
 		firing = true;
 		if (e.clientX !== undefined && e.clientY !== undefined)
@@ -508,9 +557,9 @@ window.Game = {};
 			mousey = e.clientY;
 		}
 	}, false);
-	canvas.addEventListener("mousemove", function(e)
+	canvas.addEventListener('mousemove', function (e)
 	{
-		if(firing)
+		if (firing)
 		{
 			if (e.clientX !== undefined && e.clientY !== undefined)
 			{
@@ -519,11 +568,11 @@ window.Game = {};
 			}
 		}
 	}, false);
-	canvas.addEventListener("mouseup", function(e)
+	canvas.addEventListener('mouseup', function (e)
 	{
 		firing = false;
 	}, false);
-	var context = canvas.getContext("2d");
+	var context = canvas.getContext('2d');
 	if (window.innerWidth * 0.8 > 1080)
 	{
 		context.canvas.width = 1080;
@@ -540,9 +589,12 @@ window.Game = {};
 	{
 		context.canvas.height = window.innerHeight * 0.7;
 	}
-	var last = 0; // last frame timestamp
-	var now = 0; // current timestamp
-	var step = now - last; // time between frames
+	var last = 0;
+	// last frame timestamp
+	var now = 0;
+	// current timestamp
+	var step = now - last;
+	// time between frames
 	var hurt = 0;
 	var gg = false;
 	var hurtopacity = 0;
@@ -552,75 +604,89 @@ window.Game = {};
 		height: 880,
 		map: new Game.Map(1760, 880)
 	};
-
 	room.map.generate();
-	var spawnpoints = [new Game.Spawnpoint(-100,-100), new Game.Spawnpoint(room.width / 2,-100), new Game.Spawnpoint(room.width +100 ,-100), new Game.Spawnpoint(-100,room.height/2),  new Game.Spawnpoint(-100,room.height + 100),  new Game.Spawnpoint(room.width/2,room.height+100),  new Game.Spawnpoint(room.width+100,room.height+100), new Game.Spawnpoint(room.width+100,room.height/2) ];
+	var spawnpoints = [
+		new Game.Spawnpoint(-100, -100),
+		new Game.Spawnpoint(room.width / 2, -100),
+		new Game.Spawnpoint(room.width + 100, -100),
+		new Game.Spawnpoint(-100, room.height / 2),
+		new Game.Spawnpoint(-100, room.height + 100),
+		new Game.Spawnpoint(room.width / 2, room.height + 100),
+		new Game.Spawnpoint(room.width + 100, room.height + 100),
+		new Game.Spawnpoint(room.width + 100, room.height / 2)
+	];
 	var player = new Game.Player(room.width / 2, room.height / 2);
 	var zombies = [];
-	var obstacles = [new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),Math.floor(Math.random() * 400),Math.floor(Math.random() * 400)),new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),Math.floor(Math.random() * 400),Math.floor(Math.random() * 400)),new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),Math.floor(Math.random() * 400),Math.floor(Math.random() * 400)),new Game.Obstacle( Math.floor(Math.random() * room.width),Math.floor(Math.random() * room.height),Math.floor(Math.random() * 400),Math.floor(Math.random() * 400))];
+	var obstacles = [
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400), Math.floor(Math.random() * 400)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400), Math.floor(Math.random() * 400)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400), Math.floor(Math.random() * 400)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400), Math.floor(Math.random() * 400))
+	];
 	var shots = [];
-	var guns = [new Game.Gun('pistol', 1, 64, 8, 1, 0, 0, 1, 2, 700,3,3)];//give defualt pistol
+	var guns = [new Game.Gun('pistol', 1, 64, 8, 1, 0, 0, 1, 2, 700, 6, 6)];
+	//give defualt pistol
 	var gunner = 0;
 	var camera = new Game.Camera(0, 0, canvas.width, canvas.height, room.width, room.height);
 	var spawntimer = 3000;
 	var spawnnum = 10;
 	var roundnum = 1;
 	camera.follow(player, canvas.width / 2, canvas.height / 2);
-	var injured = function()
+	var injured = function ()
 	{
 		hurtopacity = 1;
 		if (player.health >= 0)
 		{
-			setTimeout(function()
+			setTimeout(function ()
 			{
 				hurtopacity -= 0.2;
 			}, 100);
-			setTimeout(function()
+			setTimeout(function ()
 			{
 				hurtopacity -= 0.2;
 			}, 200);
-			setTimeout(function()
+			setTimeout(function ()
 			{
 				hurtopacity -= 0.2;
 			}, 300);
-			setTimeout(function()
+			setTimeout(function ()
 			{
 				hurtopacity -= 0.2;
 			}, 400);
-			setTimeout(function()
+			setTimeout(function ()
 			{
 				hurtopacity -= 0.2;
 			}, 500);
 		}
 	};
-	var roundup = function()
+	var roundup = function ()
 	{
 		roundopacity = 1;
 		if (player.health >= 0)
 		{
-			setTimeout(function()
+			setTimeout(function ()
 			{
 				roundopacity -= 0.2;
 			}, 100);
-			setTimeout(function()
+			setTimeout(function ()
 			{
 				roundopacity -= 0.2;
 			}, 200);
-			setTimeout(function()
+			setTimeout(function ()
 			{
 				roundopacity -= 0.2;
 			}, 300);
-			setTimeout(function()
+			setTimeout(function ()
 			{
 				roundopacity -= 0.2;
 			}, 400);
-			setTimeout(function()
+			setTimeout(function ()
 			{
 				roundopacity -= 0.2;
 			}, 500);
 		}
 	};
-	var zombieattack = function(num)
+	var zombieattack = function (num)
 	{
 		player.health = player.health - 1;
 		injured();
@@ -637,9 +703,9 @@ window.Game = {};
 			heart3.style.display = 'None';
 		}
 		zombies[num].attackable = false;
-		setTimeout(function()
+		setTimeout(function ()
 		{
-			if (typeof zombies[num] != "undefined")
+			if (typeof zombies[num] != 'undefined')
 			{
 				zombies[num].attackable = true;
 			}
@@ -661,7 +727,7 @@ window.Game = {};
 			zombies[num].y = zombies[num].y - 3;
 		}
 	};
-	var zombieupdate = function(step)
+	var zombieupdate = function (step)
 	{
 		for (var i = zombies.length - 1; i >= 0; i--)
 		{
@@ -670,7 +736,7 @@ window.Game = {};
 			{
 				if (i != g)
 				{
-					if ((Math.abs(zombies[i].x - zombies[g].x) < 30) && ((Math.abs(zombies[i].y - zombies[g].y) < 30)))
+					if (Math.abs(zombies[i].x - zombies[g].x) < 25 && Math.abs(zombies[i].y - zombies[g].y) < 25)
 					{
 						if (zombies[i].x > zombies[g].x)
 						{
@@ -704,75 +770,75 @@ window.Game = {};
 			}
 		}
 	};
-	var zombiespawn = function()
+	var zombiespawn = function ()
 	{
-		if(runningId != -1)
+		if (runningId != -1)
 		{
 			var spawn = Math.floor(Math.random() * spawnpoints.length);
-			if(spawnnum > 0 && zombies.length <= spawnnum)
+			if (spawnnum > 0 && zombies.length <= spawnnum)
 			{
-				zombies.push(new Game.Zombie(spawnpoints[spawn].x,spawnpoints[spawn].y, roundnum));
+				zombies.push(new Game.Zombie(spawnpoints[spawn].x, spawnpoints[spawn].y, roundnum));
 			}
-			if( spawnnum <= 0)
+			if (spawnnum <= 0)
 			{
-					clearInterval(spawner);
-					roundnum +=1;
-					round.style.color =  '#808080';
-					spawntimer = spawntimer - 200;
-					round.innerHTML = "Round:"+roundnum;
-					setTimeout(function()
-						{
-							roundup();
-							spawnnum = roundnum * 7;
-							round.style.color = '#000000';
-							spawner = setInterval(zombiespawn, spawntimer);
-						},4000);
+				clearInterval(spawner);
+				roundnum += 1;
+				round.style.color = '#808080';
+				spawntimer = spawntimer - 200;
+				round.innerHTML = 'Round:' + roundnum;
+				setTimeout(function ()
+				{
+					roundup();
+					spawnnum = roundnum * 7;
+					round.style.color = '#282e25';
+					spawner = setInterval(zombiespawn, spawntimer);
+				}, 4000);
 			}
 		}
 	};
-	var zombiehit = function(num)
+	var zombiehit = function (num)
 	{
 		zombies[num].hit = true;
-		setTimeout(function()
+		setTimeout(function ()
 		{
-			if (typeof zombies[num] != "undefined")
+			if (typeof zombies[num] != 'undefined')
 			{
 				zombies[num].hit = false;
 			}
 		}, 100);
 	};
-	var bulletupdate = function(step)
+	var bulletupdate = function (step)
 	{
 		for (var i = shots.length - 1; i >= 0; i--)
 		{
 			shots[i].update(step);
 			for (var g = zombies.length - 1; g >= 0; g--)
 			{
-				if (typeof shots[i] != "undefined")
+				if (typeof shots[i] != 'undefined')
 				{
-					if ((Math.abs(zombies[g].x - shots[i].x) < 20) && ((Math.abs(zombies[g].y - shots[i].y) < 20)))
+					if (Math.abs(zombies[g].x - shots[i].x) < 20 && Math.abs(zombies[g].y - shots[i].y) < 20)
 					{
 						zombies[g].health -= 1;
 						shots.splice(i, 1);
-						if(zombies[g].health<=0)
+						if (zombies[g].health <= 0)
 						{
 							zombies.splice(g, 1);
 							player.kills += 1;
 							player.points += 50;
-							kills.innerHTML = "Kills:"+player.kills;
-							points.innerHTML = "Points:"+player.points;
+							kills.innerHTML = 'Kills:' + player.kills;
+							points.innerHTML = 'Points:' + player.points;
 							spawnnum -= 1;
 						}
 						else
 						{
 							player.points += 10;
-							points.innerHTML = "Points:"+player.points;
+							points.innerHTML = 'Points:' + player.points;
 							zombiehit(g);
 						}
 					}
 				}
 			}
-			if (typeof shots[i] != "undefined")
+			if (typeof shots[i] != 'undefined')
 			{
 				if (shots[i].x > Map.width || shots[i].x < 0)
 				{
@@ -783,11 +849,11 @@ window.Game = {};
 					shots.splice(i, 1);
 				}
 			}
-			for (var l = obstacles.length -1 ; l >= 0; l--)
+			for (var l = obstacles.length - 1; l >= 0; l--)
 			{
-				if (typeof shots[i] != "undefined")
+				if (typeof shots[i] != 'undefined')
 				{
-					if(Math.abs(shots[i].x - obstacles[l].x) < (obstacles[l].width/2 + shots[i].width/2)&& Math.abs(shots[i].y - obstacles[l].y) <= (obstacles[l].height/2 + shots[i].height/2))
+					if (Math.abs(shots[i].x - obstacles[l].x) < obstacles[l].width / 2 + shots[i].width / 2 && Math.abs(shots[i].y - obstacles[l].y) <= obstacles[l].height / 2 + shots[i].height / 2)
 					{
 						shots.splice(i, 1);
 					}
@@ -798,14 +864,12 @@ window.Game = {};
 				}
 			}
 		}
-
-
-		if(cooldown>=0)
+		if (cooldown >= 0)
 		{
-			cooldown -=step;
+			cooldown -= step;
 		}
 	};
-	var bulletspawn = function(x, y, ex, ey, xv, yv, gun)
+	var bulletspawn = function (x, y, ex, ey, xv, yv, gun)
 	{
 		/*
 		this.name = name;
@@ -821,14 +885,13 @@ window.Game = {};
 		this.width = width;
 		this.height = height;
 		*/
-		if(cooldown <= 0)
+		if (cooldown <= 0)
 		{
-
-				shots.push(new Game.Bullet(x, y, ex, ey, xv, yv, gun));
-				cooldown = gun.cooldown;
+			shots.push(new Game.Bullet(x, y, ex, ey, xv, yv, gun));
+			cooldown = gun.cooldown;
 		}
 	};
-	var update = function(step)
+	var update = function (step)
 	{
 		player.update(step, room.width, room.height, obstacles);
 		zombieupdate(step, player.x, player.y);
@@ -840,10 +903,26 @@ window.Game = {};
 		camera.update();
 	};
 	// Game draw function
-	var draw = function()
+	var draw = function ()
 	{
 		// clear the entire canvas
 		context.clearRect(0, 0, canvas.width, canvas.height);
+		// redraw all objects
+		room.map.draw(context, camera.xView, camera.yView);
+		player.draw(context, camera.xView, camera.yView);
+		for (var i = zombies.length - 1; i >= 0; i--)
+		{
+			zombies[i].draw(context, camera.xView, camera.yView);
+		}
+		for (var j = shots.length - 1; j >= 0; j--)
+		{
+			shots[j].draw(context, camera.xView, camera.yView);
+		}
+		//draw obstacles
+		for (var t = obstacles.length - 1; t >= 0; t--)
+		{
+			obstacles[t].draw(context, camera.xView, camera.yView);
+		}
 		//hurt flash
 		context.save();
 		context.fillStyle = '#8A0707';
@@ -856,31 +935,18 @@ window.Game = {};
 		context.globalAlpha = roundopacity;
 		context.fillRect(0, 0, canvas.width, canvas.height);
 		context.restore();
-		// redraw all objects
-		room.map.draw(context, camera.xView, camera.yView);
-		player.draw(context, camera.xView, camera.yView);
-		for (var i = zombies.length - 1; i >= 0; i--)
-		{
-			zombies[i].draw(context, camera.xView, camera.yView);
-		}
-		for (var j = shots.length - 1; j >= 0; j--)
-		{
-			shots[j].draw(context, camera.xView, camera.yView);
-		}
-		for (var t = obstacles.length-1; t>=0; t--)
-		{
-			obstacles[t].draw(context, camera.xView, camera.yView);
-		}
 	};
-
 	var runningId = -1;
 	// Game Loop
-	var gameLoop = function(timestamp)
-	{ // <-- edited; timestamp comes from requestAnimationFrame. See polyfill to get this insight.
-		now = timestamp; // <-- current timestamp (in milliseconds)
-		step = (now - last) / 1000; // <-- time between frames (in seconds)
-		last = now; // <-- store the current timestamp for further evaluation in next frame/step
-		if(step > 0.1)
+	var gameLoop = function (timestamp)
+	{
+		// <-- edited; timestamp comes from requestAnimationFrame. See polyfill to get this insight.
+		now = timestamp;
+		// <-- current timestamp (in milliseconds)
+		step = (now - last) / 1000;
+		// <-- time between frames (in seconds)
+		last = now;
+		if (step > 0.1)
 		{
 			update(0.0001);
 		}
@@ -891,16 +957,17 @@ window.Game = {};
 		draw();
 		runningId = requestAnimationFrame(gameLoop); // <-- added
 	};
-	Game.play = function()
+	Game.play = function ()
 	{
 		if (runningId == -1)
 		{
 			spawner = setInterval(zombiespawn, spawntimer);
-			runningId = requestAnimationFrame(gameLoop); // <-- changed
-			console.log("play");
+			runningId = requestAnimationFrame(gameLoop);
+			// <-- changed
+			console.log('play');
 		}
 	};
-	Game.togglePause = function()
+	Game.togglePause = function ()
 	{
 		if (runningId == -1)
 		{
@@ -908,13 +975,14 @@ window.Game = {};
 		}
 		else
 		{
-			cancelAnimationFrame(runningId); // <-- changed
+			cancelAnimationFrame(runningId);
+			// <-- changed
 			runningId = -1;
 			clearInterval(spawner);
-			console.log("paused");
+			console.log('paused');
 		}
 	};
-})();
+}());
 //controls
 Game.controls = {
 	left: false,
@@ -924,59 +992,72 @@ Game.controls = {
 	reload: false,
 	action: false
 };
-window.addEventListener("keydown", function(e)
+window.addEventListener('keydown', function (e)
 {
 	switch (e.keyCode)
 	{
-		case 65: // left arrow
-			Game.controls.left = true;
-			break;
-		case 87: // up arrow
-			Game.controls.up = true;
-			break;
-		case 68: // right arrow
-			Game.controls.right = true;
-			break;
-		case 83: // down arrow
-			Game.controls.down = true;
-			break;
-		case 69: //e key action
-			Game.controls.action = true;
-			break;
-		case 81: //q key reload
-			Game.controls.reload = true;
-			break;
+	case 65:
+		// left arrow
+		Game.controls.left = true;
+		break;
+	case 87:
+		// up arrow
+		Game.controls.up = true;
+		break;
+	case 68:
+		// right arrow
+		Game.controls.right = true;
+		break;
+	case 83:
+		// down arrow
+		Game.controls.down = true;
+		break;
+	case 69:
+		//e key action
+		Game.controls.action = true;
+		break;
+	case 81:
+		//q key reload
+		Game.controls.reload = true;
+		break;
 	}
 }, false);
-window.addEventListener("keyup", function(e)
+window.addEventListener('keyup', function (e)
 {
 	switch (e.keyCode)
 	{
-		case 65: // left arrow
-			Game.controls.left = false;
-			break;
-		case 87: // up arrow
-			Game.controls.up = false;
-			break;
-		case 68: // right arrow
-			Game.controls.right = false;
-			break;
-		case 83: // down arrow
-			Game.controls.down = false;
-			break;
-		case 80: // key P pauses the game
-			Game.togglePause();
-			break;
-		case 69: //e key action
-			Game.controls.action = false;
-			break;
-		case 81: //q key reload
-			Game.controls.reload = false;
-			break;
+	case 65:
+		// left arrow
+		Game.controls.left = false;
+		break;
+	case 87:
+		// up arrow
+		Game.controls.up = false;
+		break;
+	case 68:
+		// right arrow
+		Game.controls.right = false;
+		break;
+	case 83:
+		// down arrow
+		Game.controls.down = false;
+		break;
+	case 80:
+		// key P pauses the game
+		Game.togglePause();
+		break;
+	case 69:
+		//e key action
+		Game.controls.action = false;
+		break;
+	case 81:
+		//q key reload
+		Game.controls.reload = false;
+		break;
 	}
 }, false);
 //kick it all off on window load
-window.onload = function()
+window.onload = function ()
 {
 	var round = document.getElementById('round');
 	var heart1 = document.getElementById('heart1');
