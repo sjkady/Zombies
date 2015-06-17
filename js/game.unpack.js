@@ -37,7 +37,7 @@
 	}
 }());
 //game
-window.Game = {};
+window.Game = {}; 
 //  Rectangle
 (function ()
 {
@@ -502,12 +502,14 @@ window.Game = {};
 		this.damage = damage;
 		this.ammo = ammo;
 		this.clip = clip;
+		this.clipsize = clip;
 		this.shots = shots;
 		this.splash = splash;
 		this.piercing = piercing;
 		this.cooltime = cooldown;
 		this.cooldown = cooldown;
 		this.reload = reload;
+		this.reloadtime = reload;
 		this.speed = speed;
 		this.width = width;
 		this.height = height;
@@ -682,13 +684,20 @@ window.Game = {};
 	var player = new Game.Player(room.width / 2, room.height / 2);
 	var zombies = [];
 	var obstacles = [
-		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400), Math.floor(Math.random() * 400)),
-		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400), Math.floor(Math.random() * 400)),
-		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400), Math.floor(Math.random() * 400)),
-		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400), Math.floor(Math.random() * 400))
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50))
 	];
+	for (var l = obstacles.length - 1; l >= 0; l--)
+	{
+		if((obstacles[l].x +obstacles[l].width/2  >= player.x - player.width && obstacles[l].x -obstacles[l].width/2  <= player.x + player.width) && (obstacles[l].y +obstacles[l].height/2  >= player.y - player.height && obstacles[l].y -obstacles[l].height/2  <= player.y + player.height))
+		{
+			obstacles.splice(l, 1);
+		}
+	}
 	var shots = [];
-	var guns = [new Game.Gun('pistol', 1, 64, 8, 1, 0, 0, 1, 2, 700, 6, 6)];
+	var guns = [new Game.Gun('Pistol', 1, 64, 8, 1, 0, 0, 1, 2, 700, 6, 6)];
 	//give defualt pistol
 	var camera = new Game.Camera(0, 0, canvas.width, canvas.height, room.width, room.height);
 	var spawntimer = 2500;
@@ -710,7 +719,7 @@ window.Game = {};
 				clearInterval(spawner);
 				roundnum += 1;
 				round.style.color = '#808080';
-				if (spwntimer >= 900)
+				if (spawntimer >= 900)
 				{
 					spawntimer = spawntimer - 200;
 				}
@@ -821,10 +830,23 @@ window.Game = {};
 		{
 			gun.cooldown -= step;
 		}
+		if(gun.clip <= 0)
+		{
+			gun.reload -= step;
+		}
+		if (gun.reload <= 0)
+		{
+			if(gun.ammo > 0)
+			{
+				gun.clip = gun.clipsize;
+				gun.ammo -= gun.clipsize;
+				gun.reload = gun.reloadtime;
+			}
+		}
 	};
 	var bulletspawn = function (x, y, ex, ey, xv, yv, gun)
 	{
-		if(gun.clip >= 0)
+		if(gun.clip > 0)
 		{
 			if (gun.cooldown <= 0)
 			{
@@ -887,6 +909,16 @@ window.Game = {};
 			context.fillRect(0, 0, canvas.width, canvas.height);
 			context.restore();
 		}
+		context.font = "20px Special Elite";
+		if(guns[player.gun].clip <=0)
+		{
+			context.fillStyle = "#808080";
+		}
+		else
+		{
+			context.fillStyle = "#2e2528";
+		}
+		context.fillText(guns[player.gun].name + " " + guns[player.gun].clip + "/" + guns[player.gun].ammo, 30, canvas.height-20);
 	};
 	var runningId = -1;
 	// Game Loop
