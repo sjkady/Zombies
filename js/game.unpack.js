@@ -37,7 +37,7 @@
 	}
 }());
 //game
-window.Game = {}; 
+window.Game = {};
 //  Rectangle
 (function ()
 {
@@ -297,7 +297,7 @@ window.Game = {};
 		this.hit = false;
 		this.movex = true;
 		this.movey = true;
-		this.cooldown = Math.floor(Math.random() * 3 + 1) * 1000;
+		this.cooldown = Math.floor(Math.random() * 3 + 1);
 		// move speed in pixels per second
 		this.speed = Math.floor(Math.random() * 200 + 50);
 		// render properties
@@ -713,6 +713,7 @@ window.Game = {};
 			if (spawnnum > 0 && zombies.length <= spawnnum)
 			{
 				zombies.push(new Game.Zombie(spawnpoints[spawn].x, spawnpoints[spawn].y, roundnum));
+				spawnnum -= 1;
 			}
 			if (spawnnum <= 0)
 			{
@@ -789,7 +790,6 @@ window.Game = {};
 							player.points += 50;
 							kills.innerHTML = 'Kills:' + player.kills;
 							points.innerHTML = 'Points:' + player.points;
-							spawnnum -= 1;
 						}
 						else
 						{
@@ -838,8 +838,8 @@ window.Game = {};
 		{
 			if(gun.ammo > 0)
 			{
-				gun.clip = gun.clipsize;
-				gun.ammo -= gun.clipsize;
+				gun.ammo -= gun.clipsize - gun.clip;
+				gun.clip = Math.min(gun.clipsize, gun.ammo);
 				gun.reload = gun.reloadtime;
 			}
 		}
@@ -863,11 +863,11 @@ window.Game = {};
 		{
 			zombies[i].update(step, player, obstacles, zombies, i);
 		}
-		bulletupdate(step, guns[player.gun]);
 		if (firing)
 		{
 			bulletspawn(player.x, player.y, mousex - canvas.offsetLeft, mousey - canvas.offsetTop, camera.xView, camera.yView, guns[player.gun]);
 		}
+		bulletupdate(step, guns[player.gun]);
 		camera.update();
 	};
 	// Game draw function
