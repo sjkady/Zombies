@@ -184,6 +184,26 @@ window.Game = {};
 	{
 		// parameter step is the time between frames ( in seconds )
 		// check controls and move the player accordingly
+		if(Game.controls.one)
+		{
+			this.gun = 0;
+		}
+		if(Game.controls.two)
+		{
+			this.gun = 1;
+		}
+		if(Game.controls.three)
+		{
+			this.gun = 2;
+		}
+		if(Game.controls.four)
+		{
+			this.gun = 3;
+		}
+		if(Game.controls.five)
+		{
+			this.gun = 4;
+		}
 		if (this.health >= 0 && this.move === true)
 		{
 			if (Game.controls.left)
@@ -297,7 +317,7 @@ window.Game = {};
 		this.hit = false;
 		this.movex = true;
 		this.movey = true;
-		this.cooldown = Math.floor(Math.random() * 3 + 1);
+		this.cooldown = Math.floor(Math.random() * 3000 + 1000);
 		// move speed in pixels per second
 		this.speed = Math.floor(Math.random() * 200 + 50);
 		// render properties
@@ -372,13 +392,11 @@ window.Game = {};
 			if (this.attackable === true)
 			{
 				this.attackable = false;
-				setTimeout(function ()
+				setTimeout(function (self)
 				{
-					if (typeof this != 'undefined')
-					{
-						this.attackable = true;
-					}
-				}, this.cooldown);
+					console.log('attack over');
+					self.attackable = true;
+				}, this.cooldown, this);
 				player.health = player.health - 1;
 				if (player.health === 2)
 				{
@@ -468,7 +486,7 @@ window.Game = {};
 	Bullet.prototype.draw = function (context, xView, yView)
 	{
 		context.save();
-		context.fillStyle = '#E4CE37';
+		context.fillStyle = '#000000';
 		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
 		context.restore();
 	};
@@ -697,7 +715,12 @@ window.Game = {};
 		}
 	}
 	var shots = [];
-	var guns = [new Game.Gun('Pistol', 1, 64, 8, 1, 0, 0, 1, 2, 700, 6, 6)];
+	/*name, damage, ammo, clip, shots, splash, piercing, cooldown, reload, speed, width, height*/
+	var guns = [new Game.Gun('Base Pistol', 1, 64, 8, 1, 0, 0, 1, 2, 700, 4, 4),
+							new Game.Gun('Semi Pistol', 1, 120, 15, 3, 0, 0, 1, 2, 700, 4, 4),
+							new Game.Gun('Machine Gun', 1, 300, 30, 1, 0, 0, 0.2, 5, 700, 4, 4),
+							new Game.Gun('Pea Shooter', 0.5, 200, 20, 1, 0, 0, 0.1, 3, 700, 2, 2),
+							new Game.Gun('Rifle', 5, 50, 5, 1, 0, 0, 3, 5, 700, 6, 6)];
 	//give defualt pistol
 	var camera = new Game.Camera(0, 0, canvas.width, canvas.height, room.width, room.height);
 	var spawntimer = 2500;
@@ -781,7 +804,7 @@ window.Game = {};
 				{
 					if (Math.abs(zombies[g].x - shots[i].x) < zombies[g].width / 2 + shots[i].width / 2 && Math.abs(zombies[g].y - shots[i].y) < zombies[g].height / 2 + shots[i].height / 2)
 					{
-						zombies[g].health -= 1;
+						zombies[g].health -= gun.damage;
 						shots.splice(i, 1);
 						if (zombies[g].health <= 0)
 						{
@@ -850,9 +873,15 @@ window.Game = {};
 		{
 			if (gun.cooldown <= 0)
 			{
-				shots.push(new Game.Bullet(x, y, ex, ey, xv, yv, gun));
-				gun.cooldown = gun.cooltime;
-				gun.clip -= 1;
+				for(var i = gun.shots -1; i >= 0; i--)
+				{
+					setTimeout(function (self)
+					{
+						shots.push(new Game.Bullet(x, y, ex, ey, xv, yv, gun));
+					}, i * 30, gun);
+					gun.cooldown = gun.cooltime;
+					gun.clip -= 1;
+				}
 			}
 		}
 	};
@@ -877,7 +906,6 @@ window.Game = {};
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		// redraw all objects
 		room.map.draw(context, camera.xView, camera.yView);
-		player.draw(context, camera.xView, camera.yView);
 		for (var i = zombies.length - 1; i >= 0; i--)
 		{
 			zombies[i].draw(context, camera.xView, camera.yView);
@@ -909,6 +937,7 @@ window.Game = {};
 			context.fillRect(0, 0, canvas.width, canvas.height);
 			context.restore();
 		}
+		player.draw(context, camera.xView, camera.yView);
 		context.font = "20px Special Elite";
 		if(guns[player.gun].clip <=0)
 		{
@@ -984,13 +1013,19 @@ window.Game = {};
 	};
 }());
 //controls
-Game.controls = {
+Game.controls =
+{
 	left: false,
 	up: false,
 	right: false,
 	down: false,
 	reload: false,
-	action: false
+	action: false,
+	one: false,
+	two: false,
+	three: false,
+	four: false,
+	five: false
 };
 window.addEventListener('keydown', function (e)
 {
@@ -1019,6 +1054,26 @@ window.addEventListener('keydown', function (e)
 	case 81:
 		//q key reload
 		Game.controls.reload = true;
+		break;
+	case 49:
+		// one
+		Game.controls.one = true;
+		break;
+	case 50:
+		// two
+		Game.controls.two = true;
+		break;
+	case 51:
+		// three
+		Game.controls.three = true;
+		break;
+	case 52:
+		// four
+		Game.controls.four = true;
+		break;
+	case 53:
+		// five
+		Game.controls.five = true;
 		break;
 	}
 }, false);
@@ -1054,7 +1109,28 @@ window.addEventListener('keyup', function (e)
 		//q key reload
 		Game.controls.reload = false;
 		break;
+	case 49:
+		// one
+		Game.controls.one = false;
+		break;
+	case 50:
+		// two
+		Game.controls.two = false;
+		break;
+	case 51:
+		// three
+		Game.controls.three = false;
+		break;
+	case 52:
+		// four
+		Game.controls.four = false;
+		break;
+	case 53:
+		// five
+		Game.controls.five = false;
+		break;
 	}
+
 }, false);
 //kick it all off on window load
 window.onload = function ()
