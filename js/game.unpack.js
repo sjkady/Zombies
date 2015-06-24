@@ -875,15 +875,17 @@ window.Game = {};
 			{
 				for(var i = gun.shots -1; i >= 0; i--)
 				{
-					setTimeout(function (self)
-					{
-						shots.push(new Game.Bullet(x, y, ex, ey, xv, yv, gun));
-					}, i * 30, gun);
+					setTimeout(bulletcreate(x, y, ex, ey, xv, yv, gun), i * 30);
 					gun.cooldown = gun.cooltime;
 					gun.clip -= 1;
 				}
 			}
 		}
+	};
+
+	var bulletcreate = function(x, y, ex, ey, xv, yv, gun)
+	{
+		shots.push(new Game.Bullet(x, y, ex, ey, xv, yv, gun));
 	};
 	var update = function (step)
 	{
