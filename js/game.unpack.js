@@ -398,18 +398,6 @@ window.Game = {};
 					self.attackable = true;
 				}, this.cooldown, this);
 				player.health = player.health - 1;
-				if (player.health === 2)
-				{
-					heart1.style.display = 'None';
-				}
-				else if (player.health === 1)
-				{
-					heart2.style.display = 'None';
-				}
-				else if (player.health === 0)
-				{
-					heart3.style.display = 'None';
-				}
 				player.hurtopacity = 0.9;
 				if (player.health >= 0)
 				{
@@ -661,22 +649,8 @@ window.Game = {};
 		firing = false;
 	}, false);
 	var context = canvas.getContext('2d');
-	if (window.innerWidth * 0.8 > 1080)
-	{
-		context.canvas.width = 1080;
-	}
-	else
-	{
-		context.canvas.width = window.innerWidth * 0.8;
-	}
-	if (window.innerHeight * 0.8 > 824)
-	{
-		context.canvas.height = 824;
-	}
-	else
-	{
-		context.canvas.height = window.innerHeight * 0.7;
-	}
+	context.canvas.width = window.innerWidth * 0.98;
+	context.canvas.height = window.innerHeight * 0.98;
 	var last = 0;
 	// last frame timestamp
 	var now = 0;
@@ -684,9 +658,9 @@ window.Game = {};
 	var step = now - last;
 	// time between frames
 	var room = {
-		width: 1760,
-		height: 880,
-		map: new Game.Map(1760, 880)
+		width: 3520,
+		height: 1760,
+		map: new Game.Map(3520, 1760)
 	};
 	room.map.generate();
 	var spawnpoints = [
@@ -702,6 +676,11 @@ window.Game = {};
 	var player = new Game.Player(room.width / 2, room.height / 2);
 	var zombies = [];
 	var obstacles = [
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
 		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
 		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
 		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
@@ -728,6 +707,85 @@ window.Game = {};
 	var roundnum = 1;
 	camera.follow(player, canvas.width / 2, canvas.height / 2);
 
+	/*Menu Vars*/
+	var spacingx = Math.round(context.canvas.width / 10);
+	var spacingy = Math.round(context.canvas.height / 5);
+	var size1 = Math.round(context.canvas.height / 25);
+	var size2 = Math.round(context.canvas.height / 30);
+	var size3 = Math.round(context.canvas.height / 35);
+	var size4 = Math.round(context.canvas.height / 40);
+	var size5 = Math.round(context.canvas.height / 45);
+	var size6 = Math.round(context.canvas.height / 50);
+	var menuitems = ['Play', 'Shop', 'Status', 'Restart'];
+	var menux = 0;
+	var menuy = 0;
+	var oldx = 0;
+	var oldy = 0;
+	var updateable = true;
+
+	var menuupdate = function(step)
+	{
+		if (updateable)
+	  {
+	    /*key control*/
+			if (Game.controls.up && menuy > 0 )
+			{
+	      menuy = menuy - 1;
+	      updateable = false;
+			}
+			if (Game.controls.down && menuy < menuitems.length-1)
+			{
+	      menuy = menuy + 1;
+	      updateable = false;
+			}
+	    if (Game.controls.enter)
+	    {
+
+	    }
+	  }
+	  if (updateable === false) /*If you change this to calculate based on the remainder you should get much more consistent results idiot*/
+	  {
+	    if (oldy < (menuy * spacingy) - step * 500)
+	    {
+	      oldy = oldy + step*500;
+	    }
+	    else if (oldy > (menuy * spacingy) + step * 500)
+	    {
+	      oldy = oldy - step *500;
+	    }
+	    else
+	    {
+	      updateable = true;
+	    }
+	  }
+	};
+	var menudraw = function()
+	{
+		context.save();
+		context.fillStyle = '#FFFFFF';
+		context.globalAlpha = 0.4;
+		context.fillRect(0, 0, canvas.width, canvas.height);
+		context.restore();
+		context.save();
+		context.font = "Bold 70px Codystar";
+		context.fillStyle = '#000000';
+		context.globalAlpha = 1.0;
+		context.fillText('Brambles Of Zambles', canvas.width/5, canvas.height * 0.98);
+		context.restore();
+		for (var k =  menuitems.length-1; k >=0;  k--)
+		{
+			context.save();
+			context.font = "20px Special Elite";
+			context.fillStyle = '#000000';
+			context.globalAlpha = 1.0;
+			if(k==menuy)
+			{
+				context.fillStyle = '#8A0707';
+			}
+			context.fillText(menuitems[k], spacingx, spacingy * (k+1) - oldy );
+			context.restore();
+		}
+	};
 	var zombiespawn = function ()
 	{
 		if (runningId != -1)
@@ -742,12 +800,11 @@ window.Game = {};
 			{
 				clearInterval(spawner);
 				roundnum += 1;
-				round.style.color = '#808080';
 				if (spawntimer >= 900)
 				{
 					spawntimer = spawntimer - 200;
 				}
-				round.innerHTML = 'Round:' + roundnum;
+
 				setTimeout(function ()
 				{
 					player.roundopacity = 0.9;
@@ -775,7 +832,6 @@ window.Game = {};
 						}, 500);
 					}
 					spawnnum = roundnum * 7;
-					round.style.color = '#282e25';
 					spawner = setInterval(zombiespawn, spawntimer);
 				}, 4000);
 			}
@@ -792,7 +848,6 @@ window.Game = {};
 			}
 		}, 100);
 	};
-
 	var bulletupdate = function (step, gun)
 	{
 		for (var i = shots.length - 1; i >= 0; i--)
@@ -811,13 +866,10 @@ window.Game = {};
 							zombies.splice(g, 1);
 							player.kills += 1;
 							player.points += 50;
-							kills.innerHTML = 'Kills:' + player.kills;
-							points.innerHTML = 'Points:' + player.points;
 						}
 						else
 						{
 							player.points += 10;
-							points.innerHTML = 'Points:' + player.points;
 							zombiehit(g);
 						}
 					}
@@ -882,7 +934,6 @@ window.Game = {};
 			}
 		}
 	};
-
 	var bulletcreate = function(x, y, ex, ey, xv, yv, gun)
 	{
 		shots.push(new Game.Bullet(x, y, ex, ey, xv, yv, gun));
@@ -901,7 +952,6 @@ window.Game = {};
 		bulletupdate(step, guns[player.gun]);
 		camera.update();
 	};
-	// Game draw function
 	var draw = function ()
 	{
 		// clear the entire canvas
@@ -940,6 +990,7 @@ window.Game = {};
 			context.restore();
 		}
 		player.draw(context, camera.xView, camera.yView);
+		context.save();
 		context.font = "20px Special Elite";
 		if(guns[player.gun].clip <=0)
 		{
@@ -949,9 +1000,15 @@ window.Game = {};
 		{
 			context.fillStyle = "#2e2528";
 		}
-		context.fillText(guns[player.gun].name + " " + guns[player.gun].clip + "/" + guns[player.gun].ammo, 30, canvas.height-20);
+		context.fillText(guns[player.gun].name + " " + guns[player.gun].clip + "/" + guns[player.gun].ammo, 30, canvas.height * 0.98);
+		context.restore();
+		context.save();
+		context.font = "20px Special Elite";
+		context.fillText("Round: " + roundnum + " Points: " + player.points + " Kills: " + player.kills, canvas.width - 300, 20);
+		context.restore();
 	};
 	var runningId = -1;
+	var pauseId = -1;
 	// Game Loop
 	var gameLoop = function (timestamp)
 	{
@@ -979,25 +1036,41 @@ window.Game = {};
 		last = now;
 		if (step > 0.2)
 		{
-			change(0.0001);
+			menuupdate(0.0001);
 		}
 		else
 		{
-			change(step);
+			menuupdate(step);
 		}
-		menu();
-		runningId = requestAnimationFrame(gameLoop);
+		draw();
+		menudraw();
+		pauseId = requestAnimationFrame(pauseLoop);
 	};
 	Game.play = function ()
 	{
 		if (runningId == -1)
 		{
+			cancelAnimationFrame(pauseId);
 			spawner = setInterval(zombiespawn, spawntimer);
+			pauseId = -1;
 			runningId = requestAnimationFrame(gameLoop);
-			// <-- changed
 			console.log('play');
 		}
 	};
+
+	Game.pause = function ()
+	{
+		if (runningId != -1)
+		{
+			cancelAnimationFrame(runningId);
+			clearInterval(spawner);
+			runningId = -1;
+			pauseId = requestAnimationFrame(pauseLoop);
+			console.log('paused');
+		}
+	};
+
+
 	Game.togglePause = function ()
 	{
 		if (runningId == -1)
@@ -1006,11 +1079,7 @@ window.Game = {};
 		}
 		else
 		{
-			cancelAnimationFrame(runningId);
-			// <-- changed
-			runningId = -1;
-			clearInterval(spawner);
-			console.log('paused');
+			Game.pause();
 		}
 	};
 }());
@@ -1027,7 +1096,8 @@ Game.controls =
 	two: false,
 	three: false,
 	four: false,
-	five: false
+	five: false,
+	enter: false
 };
 window.addEventListener('keydown', function (e)
 {
@@ -1076,6 +1146,9 @@ window.addEventListener('keydown', function (e)
 	case 53:
 		// five
 		Game.controls.five = true;
+		break;
+	case 13:
+		Game.controls.enter = true;
 		break;
 	}
 }, false);
@@ -1131,20 +1204,16 @@ window.addEventListener('keyup', function (e)
 		// five
 		Game.controls.five = false;
 		break;
+	case 13:
+		Game.controls.enter = false;
+		break;
 	}
-
 }, false);
 //kick it all off on window load
 window.onload = function ()
 {
 	var loading = document.getElementById('loading');
 	loading.parentNode.removeChild(loading);
-	var round = document.getElementById('round');
-	var heart1 = document.getElementById('heart1');
-	var heart2 = document.getElementById('heart2');
-	var heart3 = document.getElementById('heart3');
-	var kills = document.getElementById('kills');
-	var points = document.getElementById('points');
 	var spawner;
 	Game.play();
 };
