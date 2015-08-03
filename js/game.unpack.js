@@ -184,23 +184,23 @@ window.Game = {};
 	{
 		// parameter step is the time between frames ( in seconds )
 		// check controls and move the player accordingly
-		if(Game.controls.one)
+		if (Game.controls.one)
 		{
 			this.gun = 0;
 		}
-		if(Game.controls.two)
+		if (Game.controls.two)
 		{
 			this.gun = 1;
 		}
-		if(Game.controls.three)
+		if (Game.controls.three)
 		{
 			this.gun = 2;
 		}
-		if(Game.controls.four)
+		if (Game.controls.four)
 		{
 			this.gun = 3;
 		}
-		if(Game.controls.five)
+		if (Game.controls.five)
 		{
 			this.gun = 4;
 		}
@@ -284,6 +284,17 @@ window.Game = {};
 			this.prex = this.x;
 			this.prey = this.y;
 			this.move = true;
+		}
+		if (this.health >= 0)
+		{
+			if(this.hurtopacity >= 0)
+			{
+				this.hurtopacity -= step;
+			}
+			if(this.roundopacity >= 0)
+			{
+				this.roundopacity -= step;
+			}
 		}
 	};
 	Player.prototype.draw = function (context, xView, yView)
@@ -399,29 +410,6 @@ window.Game = {};
 				}, this.cooldown, this);
 				player.health = player.health - 1;
 				player.hurtopacity = 0.9;
-				if (player.health >= 0)
-				{
-					setTimeout(function ()
-					{
-						player.hurtopacity -= 0.1;
-					}, 100);
-					setTimeout(function ()
-					{
-						player.hurtopacity -= 0.2;
-					}, 200);
-					setTimeout(function ()
-					{
-						player.hurtopacity -= 0.2;
-					}, 300);
-					setTimeout(function ()
-					{
-						player.hurtopacity -= 0.2;
-					}, 400);
-					setTimeout(function ()
-					{
-						player.hurtopacity -= 0.2;
-					}, 500);
-				}
 			}
 		}
 	};
@@ -502,14 +490,13 @@ window.Game = {};
 // Gun
 (function ()
 {
-	function Gun(name, damage, ammo, clip, shots, splash, piercing, cooldown, reload, speed, width, height)
+	function Gun(name, damage, ammo, clip, splash, piercing, cooldown, reload, speed, width, height, owned)
 	{
 		this.name = name;
 		this.damage = damage;
 		this.ammo = ammo;
 		this.clip = clip;
 		this.clipsize = clip;
-		this.shots = shots;
 		this.splash = splash;
 		this.piercing = piercing;
 		this.cooltime = cooldown;
@@ -519,6 +506,7 @@ window.Game = {};
 		this.speed = speed;
 		this.width = width;
 		this.height = height;
+		this.owned = owned;
 	}
 	Game.Gun = Gun;
 }());
@@ -688,20 +676,24 @@ window.Game = {};
 	];
 	for (var l = obstacles.length - 1; l >= 0; l--)
 	{
-		if((obstacles[l].x +obstacles[l].width/2  >= player.x - player.width && obstacles[l].x -obstacles[l].width/2  <= player.x + player.width) && (obstacles[l].y +obstacles[l].height/2  >= player.y - player.height && obstacles[l].y -obstacles[l].height/2  <= player.y + player.height))
+		if ((obstacles[l].x + obstacles[l].width / 2 >= player.x - player.width && obstacles[l].x - obstacles[l].width / 2 <= player.x + player.width) && (obstacles[l].y + obstacles[l].height / 2 >= player.y - player.height && obstacles[l].y - obstacles[l].height / 2 <= player.y + player.height))
 		{
 			obstacles.splice(l, 1);
 		}
 	}
 	var shots = [];
 	/*name, damage, ammo, clip, shots, splash, piercing, cooldown, reload, speed, width, height*/
-	var guns = [new Game.Gun('Base Pistol', 1, 64, 8, 1, 0, 0, 1, 2, 700, 4, 4),
-							new Game.Gun('Semi Pistol', 1, 120, 15, 3, 0, 0, 1, 2, 700, 4, 4),
-							new Game.Gun('Machine Gun', 1, 300, 30, 1, 0, 0, 0.2, 5, 700, 4, 4),
-							new Game.Gun('Pea Shooter', 0.5, 200, 20, 1, 0, 0, 0.1, 3, 700, 2, 2),
-							new Game.Gun('Rifle', 5, 50, 5, 1, 0, 0, 3, 5, 700, 6, 6)];
+	var guns = [			/*name,		damage,	ammo,	clip,	splash,	pierce	cd, 	rd, sp,	 w, h, O*/
+		new Game.Gun('Base Pistol',		1,		64,		8,		0,		0, 		1, 		2,	700, 4, 4 , 1),
+		new Game.Gun('Semi Pistol',		0.7,	120,	3,		0,		0,	 	0.03,	2,	750, 3, 3, 0),
+		new Game.Gun('Machine Gun',	 	1,		300,	30,		0, 		0, 		0.2, 	5,	750, 4, 4, 0),
+		new Game.Gun('Pea Shooter', 	0.5,	200,	20,		0,		0,		0.1,	3,	800, 2, 2, 0),
+		new Game.Gun('Rifle',			5,		50,		5,		0,		0,		3,		5,	700, 6, 6, 0)
+	];
 	//give defualt pistol
 	var camera = new Game.Camera(0, 0, canvas.width, canvas.height, room.width, room.height);
+
+	var spawner = 0;
 	var spawntimer = 2500;
 	var spawnnum = 10;
 	var roundnum = 1;
@@ -723,66 +715,69 @@ window.Game = {};
 	var oldy = 0;
 	var updateable = true;
 
-	var menuupdate = function(step)
+	var menuupdate = function (step)
 	{
 		if (updateable)
-	  {
-	    /*key control*/
-			if (Game.controls.up && menuy > 0 )
+		{
+			/*key control*/
+			if (Game.controls.up && menuy > 0)
 			{
-	      menuy = menuy - 1;
-	      updateable = false;
+				menuy = menuy - 1;
+				updateable = false;
 			}
-			if (Game.controls.down && menuy < menuitems.length-1)
+			if (Game.controls.down && menuy < menuitems.length - 1)
 			{
-	      menuy = menuy + 1;
-	      updateable = false;
+				menuy = menuy + 1;
+				updateable = false;
 			}
-	    if (Game.controls.enter)
-	    {
-
-	    }
-	  }
-	  if (updateable === false) /*If you change this to calculate based on the remainder you should get much more consistent results idiot*/
-	  {
-	    if (oldy < (menuy * spacingy) - step * 500)
-	    {
-	      oldy = oldy + step*500;
-	    }
-	    else if (oldy > (menuy * spacingy) + step * 500)
-	    {
-	      oldy = oldy - step *500;
-	    }
-	    else
-	    {
-	      updateable = true;
-	    }
-	  }
+			if (Game.controls.enter)
+			{
+					if(menuy === 0)
+					{
+						Game.play();
+					}
+			}
+		}
+		if (updateable === false) /*If you change this to calculate based on the remainder you should get much more consistent results idiot*/
+		{
+			if (oldy < (menuy * spacingy) - step * 500)
+			{
+				oldy = oldy + step * 500;
+			}
+			else if (oldy > (menuy * spacingy) + step * 500)
+			{
+				oldy = oldy - step * 500;
+			}
+			else
+			{
+				updateable = true;
+			}
+		}
 	};
-	var menudraw = function()
+	var menudraw = function ()
 	{
 		context.save();
 		context.fillStyle = '#FFFFFF';
-		context.globalAlpha = 0.4;
+		context.globalAlpha = 0.6;
 		context.fillRect(0, 0, canvas.width, canvas.height);
 		context.restore();
 		context.save();
 		context.font = "Bold 70px Codystar";
-		context.fillStyle = '#000000';
+		context.fillStyle = '#8A0707';
 		context.globalAlpha = 1.0;
-		context.fillText('Brambles Of Zambles', canvas.width/5, canvas.height * 0.98);
+		context.fillText('Brambles Of Zambles', canvas.width / 4, canvas.height * 0.95);
 		context.restore();
-		for (var k =  menuitems.length-1; k >=0;  k--)
+		for (var k = menuitems.length - 1; k >= 0; k--)
 		{
 			context.save();
 			context.font = "20px Special Elite";
 			context.fillStyle = '#000000';
 			context.globalAlpha = 1.0;
-			if(k==menuy)
+			if (k == menuy)
 			{
 				context.fillStyle = '#8A0707';
 			}
-			context.fillText(menuitems[k], spacingx, spacingy * (k+1) - oldy );
+			context.fillText(menuitems[k], spacingx, spacingy * (k + 1) - oldy);
 			context.restore();
 		}
 	};
@@ -798,44 +793,24 @@ window.Game = {};
 			}
 			if (spawnnum <= 0)
 			{
-				clearInterval(spawner);
-				roundnum += 1;
-				if (spawntimer >= 900)
-				{
-					spawntimer = spawntimer - 200;
-				}
-
-				setTimeout(function ()
-				{
-					player.roundopacity = 0.9;
-					if (player.health >= 0)
-					{
-						setTimeout(function ()
-						{
-							player.roundopacity -= 0.1;
-						}, 100);
-						setTimeout(function ()
-						{
-							player.roundopacity -= 0.2;
-						}, 200);
-						setTimeout(function ()
-						{
-							player.roundopacity -= 0.2;
-						}, 300);
-						setTimeout(function ()
-						{
-							player.roundopacity -= 0.2;
-						}, 400);
-						setTimeout(function ()
-						{
-							player.roundopacity -= 0.2;
-						}, 500);
-					}
-					spawnnum = roundnum * 7;
-					spawner = setInterval(zombiespawn, spawntimer);
-				}, 4000);
+				roundup();
 			}
 		}
+	};
+	var roundup = function ()
+	{
+		clearInterval(spawner);
+		roundnum += 1;
+		player.roundopacity = 0.9;
+		if (spawntimer >= 900)
+		{
+			spawntimer = spawntimer - 200;
+		}
+		setTimeout(function ()
+		{
+			spawnnum = roundnum * 7;
+			spawner = setInterval(zombiespawn, spawntimer);
+		}, 4000);
 	};
 	var zombiehit = function (num)
 	{
@@ -905,13 +880,13 @@ window.Game = {};
 		{
 			gun.cooldown -= step;
 		}
-		if(gun.clip <= 0)
+		if (gun.clip <= 0)
 		{
 			gun.reload -= step;
 		}
 		if (gun.reload <= 0)
 		{
-			if(gun.ammo > 0)
+			if (gun.ammo > 0)
 			{
 				gun.ammo -= gun.clipsize - gun.clip;
 				gun.clip = Math.min(gun.clipsize, gun.ammo);
@@ -919,25 +894,20 @@ window.Game = {};
 			}
 		}
 	};
+
 	var bulletspawn = function (x, y, ex, ey, xv, yv, gun)
 	{
-		if(gun.clip > 0)
+		if (gun.clip > 0)
 		{
 			if (gun.cooldown <= 0)
 			{
-				for(var i = gun.shots -1; i >= 0; i--)
-				{
-					setTimeout(bulletcreate(x, y, ex, ey, xv, yv, gun), i * 30);
-					gun.cooldown = gun.cooltime;
-					gun.clip -= 1;
-				}
+				shots.push(new Game.Bullet(x, y, ex, ey, xv, yv, gun));
+				gun.clip -= 1;
+				gun.cooldown = gun.cooltime;
 			}
 		}
 	};
-	var bulletcreate = function(x, y, ex, ey, xv, yv, gun)
-	{
-		shots.push(new Game.Bullet(x, y, ex, ey, xv, yv, gun));
-	};
+
 	var update = function (step)
 	{
 		player.update(step, room.width, room.height, obstacles);
@@ -991,8 +961,24 @@ window.Game = {};
 		}
 		player.draw(context, camera.xView, camera.yView);
 		context.save();
+		context.fillStyle = '#8A0707';
+		context.font = "25px Special Elite";
+		if (player.health > 2)
+		{
+			context.fillText("❤", canvas.width - 330, 60);
+		}
+		if (player.health > 1)
+		{
+			context.fillText("❤", canvas.width - 300, 60);
+		}
+		if (player.health > 0)
+		{
+			context.fillText("❤", canvas.width - 270, 60);
+		}
+		context.restore();
+		context.save();
 		context.font = "20px Special Elite";
-		if(guns[player.gun].clip <=0)
+		if (guns[player.gun].clip <= 0)
 		{
 			context.fillStyle = "#808080";
 		}
@@ -1004,7 +990,7 @@ window.Game = {};
 		context.restore();
 		context.save();
 		context.font = "20px Special Elite";
-		context.fillText("Round: " + roundnum + " Points: " + player.points + " Kills: " + player.kills, canvas.width - 300, 20);
+		context.fillText("Round: " + roundnum + " Points: " + player.points + " Kills: " + player.kills, canvas.width - 330, 30);
 		context.restore();
 	};
 	var runningId = -1;
@@ -1060,32 +1046,31 @@ window.Game = {};
 
 	Game.pause = function ()
 	{
-		if (runningId != -1)
+		if (pauseId == -1)
 		{
 			cancelAnimationFrame(runningId);
 			clearInterval(spawner);
 			runningId = -1;
 			pauseId = requestAnimationFrame(pauseLoop);
-			console.log('paused');
+			console.log('pause');
 		}
 	};
 
 
 	Game.togglePause = function ()
 	{
-		if (runningId == -1)
+		if (runningId == -1 && pauseId != -1)
 		{
 			Game.play();
 		}
-		else
+		else if (pauseId == -1 && runningId != -1)
 		{
 			Game.pause();
 		}
 	};
 }());
 //controls
-Game.controls =
-{
+Game.controls = {
 	left: false,
 	up: false,
 	right: false,
@@ -1214,6 +1199,5 @@ window.onload = function ()
 {
 	var loading = document.getElementById('loading');
 	loading.parentNode.removeChild(loading);
-	var spawner;
 	Game.play();
 };
