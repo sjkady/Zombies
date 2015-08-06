@@ -174,8 +174,9 @@ window.Game = {};
 		this.roundopacity = 0;
 		this.move = true;
 		this.gun = 0;
+		this.tilt = false;
 		// move speed in pixels per second
-		this.speed = 300;
+		this.speed = 400;
 		// render properties
 		this.width = 40;
 		this.height = 40;
@@ -211,6 +212,7 @@ window.Game = {};
 				if (Game.controls.up || Game.controls.down)
 				{
 					this.prex -= this.speed / Math.sqrt(2) * step;
+
 				}
 				else
 				{
@@ -301,7 +303,7 @@ window.Game = {};
 	{
 		// draw a simple rectangle shape as our player model
 		context.save();
-		context.fillStyle = '#E5C298';
+		context.fillStyle = '#C67856';
 		// before draw we need to convert player world's position to canvas position
 		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
 		context.restore();
@@ -324,13 +326,13 @@ window.Game = {};
 		this.dy = 0;
 		this.mag = 0;
 		this.health = health;
-		this.attackable = true;
-		this.hit = false;
+		this.attackable = 0;
+		this.hit = 0;
 		this.movex = true;
 		this.movey = true;
 		this.cooldown = Math.floor(Math.random() * 3000 + 1000);
 		// move speed in pixels per second
-		this.speed = Math.floor(Math.random() * 200 + 50);
+		this.speed = Math.floor(Math.random() * 350 + 50);
 		// render properties
 		this.width = 30;
 		this.height = 30;
@@ -400,37 +402,40 @@ window.Game = {};
 		}
 		if (Math.abs(this.x - player.x) < this.width / 2 + player.width / 2 && Math.abs(this.y - player.y) < this.height / 2 + player.height / 2)
 		{
-			if (this.attackable === true)
+			if (this.attackable === 0)
 			{
-				this.attackable = false;
-				setTimeout(function (self)
-				{
-					console.log('attack over');
-					self.attackable = true;
-				}, this.cooldown, this);
+				this.attackable = 1;
 				player.health = player.health - 1;
 				player.hurtopacity = 0.9;
 			}
 		}
+		if(this.hit > 0)
+		{
+			this.hit -= step/2;
+		}
+		if(this.attackable > 0)
+		{
+			this.attackable -= step/10;
+		}
 	};
 	Zombie.prototype.draw = function (context, xView, yView)
 	{
-		// draw a simple rectangle shape as our player model
+		// draw a box as our zombie model
 		context.save();
-		if (this.hit === true)
+		context.fillStyle = '#5E932D';
+		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
+		if (this.hit > 0)
 		{
 			context.fillStyle = '#8A0707';
+			context.globalAlpha = this.hit;
+			context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
 		}
-		else if (this.attackable === true)
+		else if (this.attackable > 0)
 		{
 			context.fillStyle = '#A2AD59';
+			context.globalAlpha = this.attackable;
+			context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
 		}
-		else
-		{
-			context.fillStyle = '#8E936D';
-		}
-		// before draw we need to convert player world's position to canvas position
-		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
 		context.restore();
 	};
 	Game.Zombie = Zombie;
@@ -462,7 +467,7 @@ window.Game = {};
 	Bullet.prototype.draw = function (context, xView, yView)
 	{
 		context.save();
-		context.fillStyle = '#000000';
+		context.fillStyle = '#c5b358';
 		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
 		context.restore();
 	};
@@ -481,11 +486,71 @@ window.Game = {};
 	Obstacle.prototype.draw = function (context, xView, yView)
 	{
 		context.save();
-		context.fillStyle = '#584D3D';
+		context.fillStyle = '#342e24';
 		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
+		context.fillStyle = '#3d352a';
+		context.fillRect(this.x - this.width / 2 - xView + this.width*0.1, this.y - this.height / 2 - yView + this.height*0.1, this.width*0.8, this.height*0.8);
+		context.fillStyle = '#463d30';
+		context.fillRect(this.x - this.width / 2 - xView + this.width*0.2, this.y - this.height / 2 - yView + this.height*0.2, this.width*0.6, this.height*0.6);
+		context.fillStyle = '#4f4536';
+		context.fillRect(this.x - this.width / 2 - xView + this.width*0.3, this.y - this.height / 2 - yView + this.height*0.3, this.width*0.4, this.height*0.4);
+		context.fillStyle = '#584d3d';
+		context.fillRect(this.x - this.width / 2 - xView + this.width*0.4, this.y - this.height / 2 - yView + this.height*0.4, this.width*0.2, this.height*0.2);
 		context.restore();
 	};
 	Game.Obstacle = Obstacle;
+}());
+//blood
+(function ()
+{
+	function Splatter()
+	{
+		this.arr = [];
+	}
+	Splatter.prototype.create = function(x,y,dx,dy,scatter,consistancy)
+	{
+		for (var i = 0; i < 30; i++)
+		{
+			var s = Math.random() * Math.PI;
+			var dirx = (((Math.random() < 0.5) ? 3 : -3) * (Math.random() * 3)) * scatter;
+			var diry = (((Math.random() < 0.5) ? 3 : -3) * (Math.random() * 3)) * scatter;
+
+			this.arr.push
+			(
+				{
+						x: x,
+						y: y,
+						dx: dirx + dx,
+						dy: diry + dy,
+						size: s
+				}
+			);
+		}
+	};
+	Splatter.prototype.draw = function (context, xView, yView)
+	{
+		context.save();
+		var redtone = 'rgb(' + (130 + (Math.random() * 105 | 0)) + ',0,0)';
+		context.fillStyle = redtone;
+		for(var i = this.arr.length -1; i>=0; i--)
+		{
+				var t = this.arr[i];
+				var x = t.x,
+						y = t.y,
+						s = t.size;
+				context.fillRect(x - this.arr[i].size / 2 - xView, y - this.arr[i].size / 2 - yView, this.arr[i].size, this.arr[i].size);
+				t.x -= t.dx;
+				t.y -= t.dy;
+				t.size -= 0.05;
+				if (this.arr[i].size < 0.3)
+				{
+						context.fillRect(x - this.arr[i].size / 2 - xView, y - this.arr[i].size / 2 - yView, this.arr[i].size, this.arr[i].size);
+						this.arr.splice(i, 1);
+				}
+		}
+		context.restore();
+	};
+	Game.Splatter = Splatter;
 }());
 // Gun
 (function ()
@@ -545,25 +610,25 @@ window.Game = {};
 	}
 	Map.prototype.generate = function ()
 	{
+		var greentone = 'rgb('+ (100 + (Math.random() * 45 | 0)) + ',' + (170 + (Math.random() * 75 | 0)) + ','+ (80 + (Math.random() * 45 | 0)) + ')';
 		var ctx = document.createElement('canvas').getContext('2d');
 		ctx.canvas.width = this.width;
 		ctx.canvas.height = this.height;
-		var rows = Math.floor(this.width / 44) + 1;
-		var columns = Math.floor(this.height / 44) + 1;
-		var color = '#CEDFD9';
+		var rows = Math.floor(this.width / 5) + 1;
+		var columns = Math.floor(this.height / 5) + 1;
 		ctx.save();
-		ctx.fillStyle = '#CEDFD9';
-		for (var x = 0, i = 0; i < rows; x += 44, i++)
+		for (var x = 0, i = 0; i < rows; x += 10, i++)
 		{
-			ctx.beginPath();
-			for (var y = 0, j = 0; j < columns; y += 44, j++)
+			for (var y = 0, j = 0; j < columns; y += 10, j++)
 			{
-				ctx.rect(x, y, 40, 40);
+				ctx.beginPath();
+				ctx.globalAlpha = 0.7;
+				ctx.rect(x, y, 15, 15);
+				greentone = 'rgb('+ (10 + (Math.random() * 55 | 0)) + ',' + (30 + (Math.random() * 75 | 0)) + ','+ (10 + (Math.random() * 25 | 0)) + ')';
+				ctx.fillStyle = greentone;
+				ctx.fill();
+				ctx.closePath();
 			}
-			color = color == '#CEDFD9' ? '#EBFCFB' : '#CEDFD9';
-			ctx.fillStyle = color;
-			ctx.fill();
-			ctx.closePath();
 		}
 		ctx.restore();
 		// store the generate map as this image texture
@@ -605,52 +670,82 @@ window.Game = {};
 	};
 	Game.Map = Map;
 }());
+//Mouse controls
+(function ()
+{
+	function Mouse(x, y, firing)
+	{
+		this.x = x;
+		this.y = y;
+		this.firing = firing;
+	}
+	Game.Mouse = Mouse;
+}());
+//Menu
+(function ()
+{
+	function Menu(x, y, inaction, spacingx, spacingy)
+	{
+		this.x = x;
+		this.y = y;
+		this.ox = x;
+		this.oy = y;
+		this.inaction = inaction;
+		this.menuitems =  ['Shop', 'Status', 'Restart'];
+		this.spacingx = spacingx;
+		this.spacingy = spacingy;
+	}
+	Game.Menu = Menu;
+}());
 // Game Script
 (function ()
 {
-	var firing;
-	var mousex;
-	var mousey;
+	//set up canvas
 	var canvas = document.getElementById('gameCanvas');
+	var context = canvas.getContext('2d');
+	context.canvas.width = window.innerWidth * 0.98;
+	context.canvas.height = window.innerHeight * 0.98;
+	//set up mouse
+	var mouse = new Game.Mouse(0,0, false);
 	canvas.addEventListener('mousedown', function (e)
 	{
-		firing = true;
+		mouse.firing = true;
 		if (e.clientX !== undefined && e.clientY !== undefined)
 		{
-			mousex = e.clientX;
-			mousey = e.clientY;
+			mouse.x = e.clientX;
+			mouse.y = e.clientY;
 		}
 	}, false);
 	canvas.addEventListener('mousemove', function (e)
 	{
-		if (firing)
+		if (mouse.firing)
 		{
 			if (e.clientX !== undefined && e.clientY !== undefined)
 			{
-				mousex = e.clientX;
-				mousey = e.clientY;
+				mouse.x = e.clientX;
+				mouse.y = e.clientY;
 			}
 		}
 	}, false);
 	canvas.addEventListener('mouseup', function (e)
 	{
-		firing = false;
+		mouse.firing = false;
 	}, false);
-	var context = canvas.getContext('2d');
-	context.canvas.width = window.innerWidth * 0.98;
-	context.canvas.height = window.innerHeight * 0.98;
+
+	//set up frame differential
 	var last = 0;
-	// last frame timestamp
 	var now = 0;
-	// current timestamp
 	var step = now - last;
-	// time between frames
+
+	//set up room
 	var room = {
 		width: 3520,
 		height: 1760,
 		map: new Game.Map(3520, 1760)
 	};
 	room.map.generate();
+
+	//set up spawn points array
 	var spawnpoints = [
 		new Game.Spawnpoint(-100, -100),
 		new Game.Spawnpoint(room.width / 2, -100),
@@ -661,8 +756,14 @@ window.Game = {};
 		new Game.Spawnpoint(room.width + 100, room.height + 100),
 		new Game.Spawnpoint(room.width + 100, room.height / 2)
 	];
+
+	//set up player
 	var player = new Game.Player(room.width / 2, room.height / 2);
+
+	//set up zombie array
 	var zombies = [];
+
+	//set up  obstacles array
 	var obstacles = [
 		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
 		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
@@ -674,6 +775,8 @@ window.Game = {};
 		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
 		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50))
 	];
+
+	//remove obstacles in center
 	for (var l = obstacles.length - 1; l >= 0; l--)
 	{
 		if ((obstacles[l].x + obstacles[l].width / 2 >= player.x - player.width && obstacles[l].x - obstacles[l].width / 2 <= player.x + player.width) && (obstacles[l].y + obstacles[l].height / 2 >= player.y - player.height && obstacles[l].y - obstacles[l].height / 2 <= player.y + player.height))
@@ -681,8 +784,15 @@ window.Game = {};
 			obstacles.splice(l, 1);
 		}
 	}
+
+	//set up gun shots array
 	var shots = [];
-	/*name, damage, ammo, clip, shots, splash, piercing, cooldown, reload, speed, width, height*/
+	//setting splats array
+	var splats = [];
+	var splatter = new Game.Splatter(splats);
+
+	//set up guns array
+	/*name, damage, ammo, clip, shots, splash, piercing, cooldown, reload, speed, width, height, owned*/
 	var guns = [			/*name,		damage,	ammo,	clip,	splash,	pierce	cd, 	rd, sp,	 w, h, O*/
 		new Game.Gun('Base Pistol',		1,		64,		8,		0,		0, 		1, 		2,	700, 4, 4 , 1),
 		new Game.Gun('Semi Pistol',		0.7,	120,	3,		0,		0,	 	0.03,	2,	750, 3, 3, 0),
@@ -691,93 +801,74 @@ window.Game = {};
 		new Game.Gun('Rifle',			5,		50,		5,		0,		0,		3,		5,	700, 6, 6, 0)
 	];
 	//give defualt pistol
+
+	//set up camera
 	var camera = new Game.Camera(0, 0, canvas.width, canvas.height, room.width, room.height);
+	camera.follow(player, canvas.width / 2, canvas.height / 2);
+	//set up menu
+	var menu = new Game.Menu(0,0,false,Math.round(context.canvas.width / 10),Math.round(context.canvas.height / 5));
 
 	var spawner = 0;
 	var spawntimer = 2500;
 	var spawnnum = 10;
 	var roundnum = 1;
-	camera.follow(player, canvas.width / 2, canvas.height / 2);
-
-	/*Menu Vars*/
-	var spacingx = Math.round(context.canvas.width / 10);
-	var spacingy = Math.round(context.canvas.height / 5);
-	var size1 = Math.round(context.canvas.height / 25);
-	var size2 = Math.round(context.canvas.height / 30);
-	var size3 = Math.round(context.canvas.height / 35);
-	var size4 = Math.round(context.canvas.height / 40);
-	var size5 = Math.round(context.canvas.height / 45);
-	var size6 = Math.round(context.canvas.height / 50);
-	var menuitems = ['Play', 'Shop', 'Status', 'Restart'];
-	var menux = 0;
-	var menuy = 0;
-	var oldx = 0;
-	var oldy = 0;
-	var updateable = true;
 
 	var menuupdate = function (step)
 	{
-		if (updateable)
+		if (menu.inaction)
 		{
 			/*key control*/
-			if (Game.controls.up && menuy > 0)
+			if (Game.controls.up && menu.y > 0)
 			{
-				menuy = menuy - 1;
-				updateable = false;
+				menu.y = menu.y - 1;
+				menu.inaction = false;
 			}
-			if (Game.controls.down && menuy < menuitems.length - 1)
+			if (Game.controls.down && menu.y < menu.menuitems.length - 1)
 			{
-				menuy = menuy + 1;
-				updateable = false;
-			}
-			if (Game.controls.enter)
-			{
-					if(menuy === 0)
-					{
-						Game.play();
-					}
+				menu.y = menu.y + 1;
+				menu.inaction = false;
 			}
 		}
-		if (updateable === false) /*If you change this to calculate based on the remainder you should get much more consistent results idiot*/
+		if (menu.inaction === false) /*If you change this to calculate based on the remainder you should get much more consistent results idiot*/
 		{
-			if (oldy < (menuy * spacingy) - step * 500)
+			if (menu.oy < (menu.y * menu.spacingy) - step * 500)
 			{
-				oldy = oldy + step * 500;
+				menu.oy = menu.oy + step * 500;
 			}
-			else if (oldy > (menuy * spacingy) + step * 500)
+			else if (menu.oy > (menu.y * menu.spacingy) + step * 500)
 			{
-				oldy = oldy - step * 500;
+				menu.oy = menu.oy - step * 500;
 			}
 			else
 			{
-				updateable = true;
+				menu.inaction = true;
 			}
 		}
 	};
 	var menudraw = function ()
 	{
 		context.save();
-		context.fillStyle = '#FFFFFF';
+		context.fillStyle = '#000000';
 		context.globalAlpha = 0.6;
 		context.fillRect(0, 0, canvas.width, canvas.height);
 		context.restore();
 		context.save();
 		context.font = "Bold 70px Codystar";
-		context.fillStyle = '#8A0707';
+		context.fillStyle = '#9A0707';
 		context.globalAlpha = 1.0;
 		context.fillText('Brambles Of Zambles', canvas.width / 4, canvas.height * 0.95);
 		context.restore();
-		for (var k = menuitems.length - 1; k >= 0; k--)
+		for (var k = menu.menuitems.length - 1; k >= 0; k--)
 		{
 			context.save();
 			context.font = "20px Special Elite";
-			context.fillStyle = '#000000';
+			context.fillStyle = '#501010';
 			context.globalAlpha = 1.0;
-			if (k == menuy)
+			if (k == menu.y)
 			{
 				context.fillStyle = '#8A0707';
 			}
-			context.fillText(menuitems[k], spacingx, spacingy * (k + 1) - oldy);
+			context.fillText(menu.menuitems[k], menu.spacingx, menu.spacingy * (k + 1) - menu.oy);
 			context.restore();
 		}
 	};
@@ -806,23 +897,10 @@ window.Game = {};
 		{
 			spawntimer = spawntimer - 200;
 		}
-		setTimeout(function ()
-		{
-			spawnnum = roundnum * 7;
-			spawner = setInterval(zombiespawn, spawntimer);
-		}, 4000);
+		spawnnum = roundnum * 7;
+		spawner = setInterval(zombiespawn, spawntimer);
 	};
-	var zombiehit = function (num)
-	{
-		zombies[num].hit = true;
-		setTimeout(function ()
-		{
-			if (typeof zombies[num] != 'undefined')
-			{
-				zombies[num].hit = false;
-			}
-		}, 100);
-	};
+
 	var bulletupdate = function (step, gun)
 	{
 		for (var i = shots.length - 1; i >= 0; i--)
@@ -835,18 +913,20 @@ window.Game = {};
 					if (Math.abs(zombies[g].x - shots[i].x) < zombies[g].width / 2 + shots[i].width / 2 && Math.abs(zombies[g].y - shots[i].y) < zombies[g].height / 2 + shots[i].height / 2)
 					{
 						zombies[g].health -= gun.damage;
-						shots.splice(i, 1);
 						if (zombies[g].health <= 0)
 						{
 							zombies.splice(g, 1);
 							player.kills += 1;
 							player.points += 50;
+							splatter.create(shots[i].x, shots[i].y, shots[i].dx/100, shots[i].dy/100, 0.3, 0.01);
 						}
 						else
 						{
 							player.points += 10;
-							zombiehit(g);
+							zombies[g].hit = 1;
+							splatter.create(shots[i].x, shots[i].y, shots[i].dx/100, shots[i].dy/100, 0.05, 0.01);
 						}
+						shots.splice(i, 1);
 					}
 				}
 			}
@@ -915,9 +995,9 @@ window.Game = {};
 		{
 			zombies[i].update(step, player, obstacles, zombies, i);
 		}
-		if (firing)
+		if (mouse.firing)
 		{
-			bulletspawn(player.x, player.y, mousex - canvas.offsetLeft, mousey - canvas.offsetTop, camera.xView, camera.yView, guns[player.gun]);
+			bulletspawn(player.x, player.y, mouse.x - canvas.offsetLeft, mouse.y - canvas.offsetTop, camera.xView, camera.yView, guns[player.gun]);
 		}
 		bulletupdate(step, guns[player.gun]);
 		camera.update();
@@ -936,6 +1016,7 @@ window.Game = {};
 		{
 			shots[j].draw(context, camera.xView, camera.yView);
 		}
+		splatter.draw(context, camera.xView, camera.yView);
 		//draw obstacles
 		for (var t = obstacles.length - 1; t >= 0; t--)
 		{
@@ -977,19 +1058,21 @@ window.Game = {};
 		}
 		context.restore();
 		context.save();
+		context.fillStyle = '#8A0707';
 		context.font = "20px Special Elite";
 		if (guns[player.gun].clip <= 0)
 		{
-			context.fillStyle = "#808080";
+			context.fillStyle = "#505050";
 		}
 		else
 		{
-			context.fillStyle = "#2e2528";
+			context.fillStyle = "#999999";
 		}
 		context.fillText(guns[player.gun].name + " " + guns[player.gun].clip + "/" + guns[player.gun].ammo, 30, canvas.height * 0.98);
 		context.restore();
 		context.save();
 		context.font = "20px Special Elite";
+		context.fillStyle = "#999999";
 		context.fillText("Round: " + roundnum + " Points: " + player.points + " Kills: " + player.kills, canvas.width - 330, 30);
 		context.restore();
 	};
@@ -1056,7 +1139,6 @@ window.Game = {};
 		}
 	};
 
-
 	Game.togglePause = function ()
 	{
 		if (runningId == -1 && pauseId != -1)
@@ -1068,6 +1150,8 @@ window.Game = {};
 			Game.pause();
 		}
 	};
+
+
 }());
 //controls
 Game.controls = {
