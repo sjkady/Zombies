@@ -588,13 +588,21 @@ window.Game = {};
 //GunBuy
 (function ()
 {
-	function GunBuy(x, y)
+	function GunBuy(x, y, gun)
 	{
 		this.x = x;
 		this.y = y;
+		this.gun = gun;
 		this.width = 100;
 		this.height = 100;
 	}
+	GunBuy.prototype.draw = function (context, xView, yView)
+	{
+		context.save();
+		context.fillStyle = '#8A0707';
+		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
+		context.restore();
+	};
 	Game.GunBuy = GunBuy;
 }());
 // Map
@@ -614,17 +622,17 @@ window.Game = {};
 		var ctx = document.createElement('canvas').getContext('2d');
 		ctx.canvas.width = this.width;
 		ctx.canvas.height = this.height;
-		var rows = Math.floor(this.width / 5) + 1;
-		var columns = Math.floor(this.height / 5) + 1;
+		var rows = Math.floor(this.width / 20) + 1;
+		var columns = Math.floor(this.height / 20) + 1;
 		ctx.save();
-		for (var x = 0, i = 0; i < rows; x += 10, i++)
+		for (var x = 0, i = 0; i < rows; x += 20, i++)
 		{
-			for (var y = 0, j = 0; j < columns; y += 10, j++)
+			for (var y = 0, j = 0; j < columns; y += 20, j++)
 			{
 				ctx.beginPath();
 				ctx.globalAlpha = 0.7;
-				ctx.rect(x, y, 15, 15);
-				greentone = 'rgb('+ (10 + (Math.random() * 55 | 0)) + ',' + (30 + (Math.random() * 75 | 0)) + ','+ (10 + (Math.random() * 25 | 0)) + ')';
+				ctx.rect(x, y, 30, 30);
+				greentone = 'rgb('+ (10 + (Math.random() * 55 | 0)) + ',' + (40 + (Math.random() * 75 | 0)) + ','+ (10 + (Math.random() * 25 | 0)) + ')';
 				ctx.fillStyle = greentone;
 				ctx.fill();
 				ctx.closePath();
@@ -757,6 +765,7 @@ window.Game = {};
 		new Game.Spawnpoint(room.width + 100, room.height / 2)
 	];
 
+
 	//set up player
 	var player = new Game.Player(room.width / 2, room.height / 2);
 
@@ -775,7 +784,8 @@ window.Game = {};
 		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
 		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50))
 	];
-
+	//set up gunbuy array
+	var gunbuy = [];
 	//remove obstacles in center
 	for (var l = obstacles.length - 1; l >= 0; l--)
 	{
@@ -899,6 +909,7 @@ window.Game = {};
 		}
 		spawnnum = roundnum * 7;
 		spawner = setInterval(zombiespawn, spawntimer);
+		gunbuy.push(new Game.Gunbuy(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), gun));
 	};
 
 	var bulletupdate = function (step, gun)
@@ -1022,6 +1033,8 @@ window.Game = {};
 		{
 			obstacles[t].draw(context, camera.xView, camera.yView);
 		}
+		//draw player
+		player.draw(context, camera.xView, camera.yView);
 		//hurt flash
 		if (player.hurtopacity > 0)
 		{
@@ -1035,12 +1048,12 @@ window.Game = {};
 		if (player.roundopacity > 0)
 		{
 			context.save();
-			context.fillStyle = '#197319';
+			context.fillStyle = '#FFFFFF';
 			context.globalAlpha = player.roundopacity;
 			context.fillRect(0, 0, canvas.width, canvas.height);
 			context.restore();
 		}
-		player.draw(context, camera.xView, camera.yView);
+		//hud display
 		context.save();
 		context.fillStyle = '#8A0707';
 		context.font = "25px Special Elite";
