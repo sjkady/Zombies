@@ -167,6 +167,8 @@ window.Game = {};
 		this.y = y;
 		this.prex = x;
 		this.prey = y;
+		this.direction = 0;
+		this.sensitivity = 360;
 		this.health = 3;
 		this.kills = 0;
 		this.points = 0;
@@ -179,9 +181,10 @@ window.Game = {};
 		this.speed = 400;
 		// render properties
 		this.width = 40;
-		this.height = 40;
+		this.height = 20;
+		this.guncount = 1;
 	}
-	Player.prototype.update = function (step, worldWidth, worldHeight, obstacles)
+	Player.prototype.update = function (step, worldWidth, worldHeight, obstacles, gunbuy)
 	{
 		// parameter step is the time between frames ( in seconds )
 		// check controls and move the player accordingly
@@ -203,54 +206,27 @@ window.Game = {};
 		}
 		if (Game.controls.five)
 		{
-			this.gun = 4;
+				this.gun = 4;
 		}
 		if (this.health >= 0 && this.move === true)
 		{
 			if (Game.controls.left)
 			{
-				if (Game.controls.up || Game.controls.down)
-				{
-					this.prex -= this.speed / Math.sqrt(2) * step;
-
-				}
-				else
-				{
-					this.prex -= this.speed * step;
-				}
+				this.direction += this.sensitivity*step;
 			}
 			if (Game.controls.right)
 			{
-				if (Game.controls.up || Game.controls.down)
-				{
-					this.prex += this.speed / Math.sqrt(2) * step;
-				}
-				else
-				{
-					this.prex += this.speed * step;
-				}
+				this.direction -= this.sensitivity*step;
 			}
 			if (Game.controls.up)
 			{
-				if (Game.controls.right || Game.controls.left)
-				{
-					this.prey -= this.speed / Math.sqrt(2) * step;
-				}
-				else
-				{
-					this.prey -= this.speed * step;
-				}
+				this.prey += this.speed * Math.cos(this.direction * Math.PI / 180) * step;
+				this.prex += this.speed * Math.sin(this.direction * Math.PI / 180) * step;
 			}
 			if (Game.controls.down)
 			{
-				if (Game.controls.right || Game.controls.left)
-				{
-					this.prey += this.speed / Math.sqrt(2) * step;
-				}
-				else
-				{
-					this.prey += this.speed * step;
-				}
+				this.prey -= this.speed * Math.cos(this.direction * Math.PI / 180) * step;
+				this.prex -= this.speed * Math.sin(this.direction * Math.PI / 180) * step;
 			}
 		}
 		if (this.prex - this.width / 2 < 0)
@@ -276,6 +252,23 @@ window.Game = {};
 				this.move = false;
 			}
 		}
+		for (var l = gunbuy.length - 1; t >= 0; t--)
+		{
+			if (Math.abs(this.prex - gunbuy[l].x) <= gunbuy[l].width / 2 + this.width / 2 && Math.abs(this.prey - gunbuy[l].y) <= gunbuy[l].height / 2 + this.height / 2)
+			{
+				if (this.guncount <2)
+				{
+					guns[gunbuy.gun].owned = 1;
+					this.guncount+=1;
+				}
+				else
+				{
+					guns[this.gun].owned = 0;
+					guns[gunbuy.gun].owned = 1;
+					this.gun = gunbuy.gun;
+				}
+			}
+		}
 		if (this.move === true)
 		{
 			this.x = this.prex;
@@ -298,14 +291,26 @@ window.Game = {};
 				this.roundopacity -= step;
 			}
 		}
+
 	};
 	Player.prototype.draw = function (context, xView, yView)
 	{
 		// draw a simple rectangle shape as our player model
 		context.save();
+		context.translate((this.x - xView), (this.y - yView));
+		context.rotate(-(this.direction*Math.PI/180));
+		context.translate(-(this.x - xView),-(this.y - yView));
 		context.fillStyle = '#C67856';
 		// before draw we need to convert player world's position to canvas position
-		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
+		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height /2 - yView, this.width, this.height);
+		context.beginPath();
+		 context.arc(this.x - xView, this.y - yView+3, this.height*0.45, 0, 2 * Math.PI, false);
+		 context.fillStyle = '#663300';
+		 context.fill();
+		 context.lineWidth = 5;
+		 context.strokeStyle = '#774422';
+		 context.stroke();
+		context.closePath();
 		context.restore();
 	};
 	Game.Player = Player;
@@ -330,17 +335,19 @@ window.Game = {};
 		this.hit = 0;
 		this.movex = true;
 		this.movey = true;
+		this.rotation = 0;
 		this.cooldown = Math.floor(Math.random() * 3000 + 1000);
 		// move speed in pixels per second
 		this.speed = Math.floor(Math.random() * 350 + 50);
 		// render properties
-		this.width = 30;
-		this.height = 30;
+		this.width = 40;
+		this.height = 20;
 	}
 	Zombie.prototype.update = function (step, player, obstacles, zombies, index)
 	{
 		this.dx = player.x - this.x;
 		this.dy = player.y - this.y;
+		this.rotation = Math.atan2(this.dx, this.dy);
 		this.mag = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
 		this.prex += this.dx / this.mag * this.speed * step;
 		for (var h = zombies.length - 1; h >= 0; h--)
@@ -409,6 +416,7 @@ window.Game = {};
 				player.hurtopacity = 0.9;
 			}
 		}
+
 		if(this.hit > 0)
 		{
 			this.hit -= step/2;
@@ -422,6 +430,9 @@ window.Game = {};
 	{
 		// draw a box as our zombie model
 		context.save();
+		context.translate((this.x - xView), (this.y - yView));
+		context.rotate(-(this.rotation));
+		context.translate(-(this.x - xView),-(this.y - yView));
 		context.fillStyle = '#5E932D';
 		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
 		if (this.hit > 0)
@@ -436,6 +447,14 @@ window.Game = {};
 			context.globalAlpha = this.attackable;
 			context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
 		}
+		context.beginPath();
+		 context.arc(this.x - xView, this.y - yView+3, this.height*0.45, 0, 2 * Math.PI, false);
+		 context.fillStyle = '#A2AD59';
+		 context.fill();
+		 context.lineWidth = 5;
+		 context.strokeStyle = '#B8AD59';
+		 context.stroke();
+		context.closePath();
 		context.restore();
 	};
 	Game.Zombie = Zombie;
@@ -593,13 +612,16 @@ window.Game = {};
 		this.x = x;
 		this.y = y;
 		this.gun = gun;
-		this.width = 100;
-		this.height = 100;
+		this.width = 150;
+		this.height = 150;
+		this.opacity = 0.5;
+		this.color = '#8A0707';
 	}
 	GunBuy.prototype.draw = function (context, xView, yView)
 	{
 		context.save();
-		context.fillStyle = '#8A0707';
+		context.globalAlpha  = this.opacity;
+		context.fillStyle = this.color;
 		context.fillRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height);
 		context.restore();
 	};
@@ -622,8 +644,8 @@ window.Game = {};
 		var ctx = document.createElement('canvas').getContext('2d');
 		ctx.canvas.width = this.width;
 		ctx.canvas.height = this.height;
-		var rows = Math.floor(this.width / 20) + 1;
-		var columns = Math.floor(this.height / 20) + 1;
+		var rows = Math.floor(this.width / 5) + 1;
+		var columns = Math.floor(this.height / 5) + 1;
 		ctx.save();
 		for (var x = 0, i = 0; i < rows; x += 20, i++)
 		{
@@ -774,18 +796,17 @@ window.Game = {};
 
 	//set up  obstacles array
 	var obstacles = [
-		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
-		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
-		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
-		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
-		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
-		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
-		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
-		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50)),
-		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 400 + 50), Math.floor(Math.random() * 400 + 50))
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 300 + 50), Math.floor(Math.random() * 300 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 300 + 50), Math.floor(Math.random() * 300 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 300 + 50), Math.floor(Math.random() * 300 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 300 + 50), Math.floor(Math.random() * 300 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 300 + 50), Math.floor(Math.random() * 300 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 300 + 50), Math.floor(Math.random() * 300 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 300 + 50), Math.floor(Math.random() * 300 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 300 + 50), Math.floor(Math.random() * 300 + 50)),
+		new Game.Obstacle(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * 300 + 50), Math.floor(Math.random() * 300 + 50))
 	];
-	//set up gunbuy array
-	var gunbuy = [];
+
 	//remove obstacles in center
 	for (var l = obstacles.length - 1; l >= 0; l--)
 	{
@@ -795,12 +816,14 @@ window.Game = {};
 		}
 	}
 
+	//set up gunbuy array
+	var gunbuy = [];
+
 	//set up gun shots array
 	var shots = [];
 	//setting splats array
 	var splats = [];
 	var splatter = new Game.Splatter(splats);
-
 	//set up guns array
 	/*name, damage, ammo, clip, shots, splash, piercing, cooldown, reload, speed, width, height, owned*/
 	var guns = [			/*name,		damage,	ammo,	clip,	splash,	pierce	cd, 	rd, sp,	 w, h, O*/
@@ -909,7 +932,8 @@ window.Game = {};
 		}
 		spawnnum = roundnum * 7;
 		spawner = setInterval(zombiespawn, spawntimer);
-		gunbuy.push(new Game.Gunbuy(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), gun));
+		gunbuy.pop();
+		gunbuy.push(new Game.GunBuy(Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), Math.floor(Math.random() * guns.length)));
 	};
 
 	var bulletupdate = function (step, gun)
@@ -1001,7 +1025,7 @@ window.Game = {};
 
 	var update = function (step)
 	{
-		player.update(step, room.width, room.height, obstacles);
+		player.update(step, room.width, room.height, obstacles, gunbuy);
 		for (var i = zombies.length - 1; i >= 0; i--)
 		{
 			zombies[i].update(step, player, obstacles, zombies, i);
@@ -1019,10 +1043,6 @@ window.Game = {};
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		// redraw all objects
 		room.map.draw(context, camera.xView, camera.yView);
-		for (var i = zombies.length - 1; i >= 0; i--)
-		{
-			zombies[i].draw(context, camera.xView, camera.yView);
-		}
 		for (var j = shots.length - 1; j >= 0; j--)
 		{
 			shots[j].draw(context, camera.xView, camera.yView);
@@ -1032,6 +1052,14 @@ window.Game = {};
 		for (var t = obstacles.length - 1; t >= 0; t--)
 		{
 			obstacles[t].draw(context, camera.xView, camera.yView);
+		}
+		for (var k = gunbuy.length - 1; k >= 0; k--)
+		{
+			gunbuy[k].draw(context, camera.xView, camera.yView);
+		}
+		for (var i = zombies.length - 1; i >= 0; i--)
+		{
+			zombies[i].draw(context, camera.xView, camera.yView);
 		}
 		//draw player
 		player.draw(context, camera.xView, camera.yView);
@@ -1179,7 +1207,8 @@ Game.controls = {
 	three: false,
 	four: false,
 	five: false,
-	enter: false
+	enter: false,
+	weapon:false
 };
 window.addEventListener('keydown', function (e)
 {
@@ -1231,6 +1260,9 @@ window.addEventListener('keydown', function (e)
 		break;
 	case 13:
 		Game.controls.enter = true;
+		break;
+	case 82:
+		Game.controls.weapon = true;
 		break;
 	}
 }, false);
@@ -1288,6 +1320,9 @@ window.addEventListener('keyup', function (e)
 		break;
 	case 13:
 		Game.controls.enter = false;
+		break;
+	case 82:
+		Game.controls.weapon = false;
 		break;
 	}
 }, false);

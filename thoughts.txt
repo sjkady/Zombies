@@ -1,0 +1,21 @@
+1. add gun system like borderlands
+  >laser sights
+  >explosions
+  >modular parts
+
+2. Menu needs to be completed.
+  >Status
+  >weapons
+  >Stats
+
+3. Add storyline mode
+
+4. add node.js hosting the main hosting mechanism
+
+5. Upgrade graphics
+
+6. gun radius
+  >pistol sub radias
+  >shotgun machinegun
+  >explosives
+  >machine gun like 170 shotgun like 160 rifle 150 and RPG 140
