@@ -79,7 +79,7 @@ window.Game = {};
   Game.Rectangle = Rectangle;
 }());
 //Camera
-(function() {
+h(function() {
   var AXIS = {
     NONE: 'none',
     HORIZONTAL: 'horizontal',
@@ -280,7 +280,7 @@ window.Game = {};
     context.fillStyle = '#0085B2';
 		context.strokeStyle = '#113987';
     // before draw we need to convert player world's position to canvas position
-    context.roundRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height, 5, 5, true,true );
+    context.roundRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height, 7, true,true );
     context.beginPath();
     context.arc(this.x - xView, this.y - yView + 3, this.height * 0.45, 0, 2 * Math.PI, false);
     context.fillStyle = '#663300';
@@ -389,7 +389,7 @@ window.Game = {};
     context.translate(-(this.x - xView), -(this.y - yView));
     context.fillStyle = '#5E932D';
 		context.strokeStyle = '#5a632D';
-    context.roundRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height, 5, 5, true,true );
+    context.roundRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height, 7, true,true );
     if (this.hit > 0) {
       context.fillStyle = '#8A0707';
       context.globalAlpha = this.hit;
@@ -428,7 +428,7 @@ window.Game = {};
   }
 	Corpse.prototype.update = function(step)
 	{
-		if (this.opacity > 0) {
+		if (this.opacity >= 0) {
 			this.opacity -= step/5;
 		}
 		if (this.opacity <= 0){
@@ -515,26 +515,57 @@ window.Game = {};
 }());
 //Obstacle
 (function() {
-  function Obstacle(x, y, width, height) {
+  function Obstacle(x, y, width, height, type) {
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
+    this.type = 1;
   }
-  Obstacle.prototype.draw = function(context, xView, yView) {
-    context.save();
-		context.strokeStyle = '#3d352a';
-    context.fillStyle = '#342e24';
-    context.roundRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height, 5, 5, true,true );
-    context.fillStyle = '#3d352a';
-    context.roundRect(this.x - this.width / 2 - xView + this.width * 0.1, this.y - this.height / 2 - yView + this.height * 0.1, this.width * 0.8, this.height * 0.8, 5, 5, true,true );
-    context.fillStyle = '#463d30';
-    context.roundRect(this.x - this.width / 2 - xView + this.width * 0.2, this.y - this.height / 2 - yView + this.height * 0.2, this.width * 0.6, this.height * 0.6, 5, 5, true,true );
-    context.fillStyle = '#4f4536';
-    context.roundRect(this.x - this.width / 2 - xView + this.width * 0.3, this.y - this.height / 2 - yView + this.height * 0.3, this.width * 0.4, this.height * 0.4, 5, 5, true,true );
-    context.fillStyle = '#584d3d';
-    context.roundRect(this.x - this.width / 2 - xView + this.width * 0.4, this.y - this.height / 2 - yView + this.height * 0.4, this.width * 0.2, this.height * 0.2, 5, 5, true,true );
-    context.restore();
+  Obstacle.prototype.draw = function(context, xView, yView, type) {
+    if(type ==1)
+    {
+      context.save();
+  		context.strokeStyle = '#3d352a';
+      context.fillStyle = '#342e24';
+      context.roundRect(this.x - this.width / 2 - xView, this.y - this.height / 2 - yView, this.width, this.height, 5, 5, true,true );
+      context.fillStyle = '#3d352a';
+      context.roundRect(this.x - this.width / 2 - xView + this.width * 0.1, this.y - this.height / 2 - yView + this.height * 0.1, this.width * 0.8, this.height * 0.8, 5, 5, true,true );
+      context.fillStyle = '#463d30';
+      context.roundRect(this.x - this.width / 2 - xView + this.width * 0.2, this.y - this.height / 2 - yView + this.height * 0.2, this.width * 0.6, this.height * 0.6, 5, 5, true,true );
+      context.fillStyle = '#4f4536';
+      context.roundRect(this.x - this.width / 2 - xView + this.width * 0.3, this.y - this.height / 2 - yView + this.height * 0.3, this.width * 0.4, this.height * 0.4, 5, 5, true,true );
+      context.fillStyle = '#584d3d';
+      context.roundRect(this.x - this.width / 2 - xView + this.width * 0.4, this.y - this.height / 2 - yView + this.height * 0.4, this.width * 0.2, this.height * 0.2, 5, 5, true,true );
+      context.restore();
+    }
+    else if (type ==2)
+    {
+      context.fillStyle = '#228B22';
+      context.beginPath();
+      context.arc(x, y, width,0,2*Math.PI);
+      ctx.closePath();
+      context.fill();
+      context.fillStyle = '#1b6f1b';
+      context.beginPath();
+      context.arc(x, y, width*0.7,0,2*Math.PI);
+      ctx.closePath();
+      context.fill();
+      context.fillStyle = '#145314';
+      context.beginPath();
+      context.arc(x, y, width*0.5,0,2*Math.PI);
+      ctx.closePath();
+      context.fill();
+      context.fillStyle = '#0d370d';
+      context.beginPath();
+      context.arc(x, y, width*0.35,0,2*Math.PI);
+      ctx.closePath();
+      context.fill();
+      context.fillStyle = '#061b06';
+      context.beginPath();
+      context.arc(x, y, width*0.2,0,2*Math.PI);
+      ctx.closePath();
+    }
   };
   Game.Obstacle = Obstacle;
 }());
@@ -979,6 +1010,10 @@ window.Game = {};
     }
 		for (var v = corpses.length - 1; v >= 0; v--) {
 			corpses[v].update(step);
+      if(corpses[v].opacity <= 0)
+      {
+        corpses.splice(v,1);
+      }
 		}
     if (mouse.firing) {
       bulletspawn(player.x, player.y, mouse.x - canvas.offsetLeft, mouse.y - canvas.offsetTop, camera.xView, camera.yView, guns[player.gun]);
